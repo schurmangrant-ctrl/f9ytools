@@ -1,17 +1,26 @@
 /*
   Full FBS team roster for the Team Browser panel.
 
-  Conference realignment moves fast, and the newest moves here (the
-  relaunched Pac-12 for the 2026 season, and the resulting Mountain West
-  shake-up) are the parts I'm least confident are 100% current — double
-  check the "Mountain West" and "Pac-12" sections below before relying on
-  them for real content, and edit freely; this is a plain array.
+  All 138 FBS teams for the 2026 season, cross-checked against live web
+  search (not just training-data recall) after the major Group of Six
+  realignment that took effect for 2026 — the Pac-12 relaunch (8 teams:
+  2 legacy + 5 from Mountain West + 1 from Sun Belt), the resulting
+  Mountain West rebuild (lost 5 to Pac-12, gained Northern Illinois from
+  the MAC, UTEP from Conference USA, and FCS transition North Dakota
+  State), Conference USA dropping to 10 (UTEP and Louisiana Tech both
+  departed), the MAC picking up Sacramento State (FCS transition) and
+  UMass (ex-independent) to reach 13, and Sun Belt gaining Louisiana
+  Tech to reach 14. Conference realignment can still move fast — if
+  something here looks off, it's a one-line edit.
 
-  `logo` is intentionally left null — no real logo files/URLs are baked
-  in yet. Until real logos are wired in (via assets/logos/<team>.png or
-  an imported team_logo_lookup()-style URL map), the Team Browser shows a
-  colored initials chip using each team's `colors`, so the feature works
-  end-to-end today and just needs logos dropped in later.
+  Sources checked: CBS Sports, Fox Sports, ESPN, Front Office Sports,
+  and each conference's own site, all reporting the 2026 season's
+  finalized membership.
+
+  Real logo files live in assets/logos/<slugified-team-name>.png — see
+  slugify() in app.js. A team without a matching file (or a name whose
+  slug doesn't match a filename) falls back to a colored initials chip
+  using its `colors`, so the Team Browser degrades gracefully either way.
 
   Shape: { name, abbr, conf, tier, colors: [primary, secondary], aliases? }
   tier: 'P4' (Power Four: ACC/Big Ten/Big 12/SEC), 'G6' (Group of Six),
@@ -118,13 +127,12 @@ window.F9Y_TEAMS = [
   { name: 'Jacksonville State', abbr: 'JVST', conf: 'Conference USA', tier: 'G6', colors: ['#8C1D40', '#FFFFFF'] },
   { name: 'Kennesaw State', abbr: 'KENN', conf: 'Conference USA', tier: 'G6', colors: ['#000000', '#FFC629'] },
   { name: 'Liberty', abbr: 'LIB', conf: 'Conference USA', tier: 'G6', colors: ['#002D62', '#C41230'] },
-  { name: 'Louisiana Tech', abbr: 'LT', conf: 'Conference USA', tier: 'G6', colors: ['#C41230', '#002F6C'] },
   { name: 'Middle Tennessee', abbr: 'MTSU', conf: 'Conference USA', tier: 'G6', colors: ['#0066CC', '#4D4D4F'] },
   { name: 'Missouri State', abbr: 'MOST', conf: 'Conference USA', tier: 'G6', colors: ['#6F263D', '#FFFFFF'] },
   { name: 'New Mexico State', abbr: 'NMSU', conf: 'Conference USA', tier: 'G6', colors: ['#8B0000', '#FFFFFF'] },
   { name: 'Sam Houston', abbr: 'SHSU', conf: 'Conference USA', tier: 'G6', colors: ['#FF6600', '#FFFFFF'] },
-  { name: 'UTEP', abbr: 'UTEP', conf: 'Conference USA', tier: 'G6', colors: ['#FF8200', '#041E42'] },
   { name: 'Western Kentucky', abbr: 'WKU', conf: 'Conference USA', tier: 'G6', colors: ['#C60C30', '#FFFFFF'] },
+  // UTEP -> Mountain West and Louisiana Tech -> Sun Belt for 2026, both moved below
 
   // ---------------- MAC (G6) ----------------
   { name: 'Akron', abbr: 'AKR', conf: 'MAC', tier: 'G6', colors: ['#041E42', '#A89968'] },
@@ -135,35 +143,41 @@ window.F9Y_TEAMS = [
   { name: 'Eastern Michigan', abbr: 'EMU', conf: 'MAC', tier: 'G6', colors: ['#006633', '#FFFFFF'] },
   { name: 'Kent State', abbr: 'KENT', conf: 'MAC', tier: 'G6', colors: ['#002664', '#EAAB00'] },
   { name: 'Miami (OH)', abbr: 'M-OH', conf: 'MAC', tier: 'G6', colors: ['#C41230', '#FFFFFF'], aliases: ['Miami Ohio'] },
-  { name: 'Northern Illinois', abbr: 'NIU', conf: 'MAC', tier: 'G6', colors: ['#BA0C2F', '#000000'] },
   { name: 'Ohio', abbr: 'OHIO', conf: 'MAC', tier: 'G6', colors: ['#00694E', '#FFFFFF'] },
+  // Sacramento State: FCS transition, joined as a football-only member for 2026
+  { name: 'Sacramento State', abbr: 'SAC', conf: 'MAC', tier: 'G6', colors: ['#046A38', '#FFC72C'] },
   { name: 'Toledo', abbr: 'TOL', conf: 'MAC', tier: 'G6', colors: ['#0A1F63', '#FFC845'] },
+  { name: 'UMass', abbr: 'UMASS', conf: 'MAC', tier: 'G6', colors: ['#881C1C', '#FFFFFF'], aliases: ['Massachusetts'] },
   { name: 'Western Michigan', abbr: 'WMU', conf: 'MAC', tier: 'G6', colors: ['#532E1F', '#FFC72C'] },
+  // Northern Illinois -> Mountain West for 2026, moved below
 
   // ---------------- Mountain West (G6) ----------------
-  // NOTE: several longtime members left for the relaunched Pac-12 below —
-  // verify this list is current before relying on it.
+  // Lost Boise State, Colorado State, Fresno State, San Diego State and
+  // Utah State to the relaunched Pac-12 below; backfilled with Northern
+  // Illinois (from the MAC), UTEP (from Conference USA), and FCS transition
+  // North Dakota State — confirmed via live search, 10 members for 2026.
   { name: 'Air Force', abbr: 'AF', conf: 'Mountain West', tier: 'G6', colors: ['#003087', '#8A8D8F'] },
   { name: 'Hawaii', abbr: 'HAW', conf: 'Mountain West', tier: 'G6', colors: ['#024731', '#C8C9C7'] },
   { name: 'Nevada', abbr: 'NEV', conf: 'Mountain West', tier: 'G6', colors: ['#003366', '#A2AAAD'] },
   { name: 'New Mexico', abbr: 'UNM', conf: 'Mountain West', tier: 'G6', colors: ['#BA0C2F', '#A7A8AA'] },
+  { name: 'North Dakota State', abbr: 'NDSU', conf: 'Mountain West', tier: 'G6', colors: ['#00583D', '#FFC425'], aliases: ['North Dakota St.', 'NDSU Bison'] },
+  { name: 'Northern Illinois', abbr: 'NIU', conf: 'Mountain West', tier: 'G6', colors: ['#BA0C2F', '#000000'] },
   { name: 'San Jose State', abbr: 'SJSU', conf: 'Mountain West', tier: 'G6', colors: ['#0055A2', '#E5A823'] },
+  { name: 'UNLV', abbr: 'UNLV', conf: 'Mountain West', tier: 'G6', colors: ['#CF0A2C', '#B2B4B2'] },
+  { name: 'UTEP', abbr: 'UTEP', conf: 'Mountain West', tier: 'G6', colors: ['#FF8200', '#041E42'] },
   { name: 'Wyoming', abbr: 'WYO', conf: 'Mountain West', tier: 'G6', colors: ['#492F24', '#FFC425'] },
-  // Added on a spot-check against a real logo set — Sac State's move to
-  // FBS/Mountain West is recent, double check this placement.
-  { name: 'Sacramento State', abbr: 'SAC', conf: 'Mountain West', tier: 'G6', colors: ['#046A38', '#FFC72C'] },
 
   // ---------------- Pac-12 (relaunched, G6) ----------------
-  // NOTE: this conference relaunched football for the 2026 season —
-  // membership here is my best knowledge but double-check it. Oregon
-  // State and Washington State are the two legacy members who kept the
-  // conference name through the 2024 realignment; the rest are new adds.
+  // Relaunched for the 2026 season: Oregon State and Washington State are
+  // the two legacy members who kept the conference name through the 2024
+  // collapse; the rest are new adds (5 from Mountain West, 1 from Sun
+  // Belt) — confirmed via live search, 8 members for 2026. Note UNLV did
+  // NOT join this — it stayed in Mountain West.
   { name: 'Boise State', abbr: 'BSU', conf: 'Pac-12', tier: 'G6', colors: ['#0033A0', '#D64309'] },
   { name: 'Colorado State', abbr: 'CSU', conf: 'Pac-12', tier: 'G6', colors: ['#1E4D2B', '#C8C372'] },
   { name: 'Fresno State', abbr: 'FRES', conf: 'Pac-12', tier: 'G6', colors: ['#DB0032', '#002856'] },
   { name: 'Oregon State', abbr: 'ORST', conf: 'Pac-12', tier: 'G6', colors: ['#DC4405', '#000000'] },
   { name: 'San Diego State', abbr: 'SDSU', conf: 'Pac-12', tier: 'G6', colors: ['#A6192E', '#000000'] },
-  { name: 'UNLV', abbr: 'UNLV', conf: 'Pac-12', tier: 'G6', colors: ['#CF0A2C', '#B2B4B2'] },
   { name: 'Utah State', abbr: 'USU', conf: 'Pac-12', tier: 'G6', colors: ['#0F2439', '#4C7CB4'] },
   { name: 'Washington State', abbr: 'WSU', conf: 'Pac-12', tier: 'G6', colors: ['#981E32', '#5E6A71'] },
   { name: 'Texas State', abbr: 'TXST', conf: 'Pac-12', tier: 'G6', colors: ['#501214', '#A99873'] },
@@ -176,6 +190,8 @@ window.F9Y_TEAMS = [
   { name: 'Georgia State', abbr: 'GSU', conf: 'Sun Belt', tier: 'G6', colors: ['#0039A6', '#C60C30'] },
   { name: 'James Madison', abbr: 'JMU', conf: 'Sun Belt', tier: 'G6', colors: ['#450084', '#CBB677'] },
   { name: 'Louisiana', abbr: 'ULL', conf: 'Sun Belt', tier: 'G6', colors: ['#CE181E', '#FFFFFF'], aliases: ['Louisiana-Lafayette', 'UL Lafayette'] },
+  // Louisiana Tech: rejoined the Sun Belt for 2026, moved from Conference USA
+  { name: 'Louisiana Tech', abbr: 'LT', conf: 'Sun Belt', tier: 'G6', colors: ['#C41230', '#002F6C'] },
   { name: 'UL Monroe', abbr: 'ULM', conf: 'Sun Belt', tier: 'G6', colors: ['#7A1734', '#FFC72C'], aliases: ['Louisiana-Monroe', 'Louisiana Monroe'] },
   { name: 'Marshall', abbr: 'MRSH', conf: 'Sun Belt', tier: 'G6', colors: ['#00B140', '#FFFFFF'] },
   { name: 'Old Dominion', abbr: 'ODU', conf: 'Sun Belt', tier: 'G6', colors: ['#003057', '#A7A9AC'] },
@@ -184,7 +200,8 @@ window.F9Y_TEAMS = [
   { name: 'Troy', abbr: 'TROY', conf: 'Sun Belt', tier: 'G6', colors: ['#862633', '#A7A8AA'] },
 
   // ---------------- Independents ----------------
+  // Just 2 for 2026 — UMass joined the MAC (see above), leaving only
+  // Notre Dame and UConn as true FBS independents.
   { name: 'Notre Dame', abbr: 'ND', conf: 'Independent', tier: 'IND', colors: ['#0C2340', '#C99700'] },
   { name: 'UConn', abbr: 'CONN', conf: 'Independent', tier: 'IND', colors: ['#000E2F', '#FFFFFF'], aliases: ['Connecticut'] },
-  { name: 'UMass', abbr: 'UMASS', conf: 'Independent', tier: 'IND', colors: ['#881C1C', '#FFFFFF'], aliases: ['Massachusetts'] },
 ];
