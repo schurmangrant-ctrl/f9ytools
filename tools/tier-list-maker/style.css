@@ -196,8 +196,16 @@
 /*
   --- the exportable card ---
   Mirrors graphics/branding.py's render_branded_card frame exactly:
-  green left stripe, black header (eyebrow/headline/subtitle), cream
-  body (the tiers), black footer (tagline/meta).
+  green left stripe, black header (eyebrow/headline), cream body (the
+  tiers), black footer (tagline). Fixed to Instagram's optimal post
+  ratio (4:5, 1080x1350) via JS (see layoutBoard() in app.js) rather
+  than growing with content — header/footer/each tier row get an
+  explicit pixel height computed from the card's current width, so the
+  export is always exactly on-ratio no matter how many tiers or items
+  are on the board. Advanced CSS sizing (aspect-ratio, etc.) is
+  deliberately avoided here since html2canvas's rendering engine doesn't
+  reliably support it — plain computed pixel heights render identically
+  on-screen and in the export.
 */
 
 .tl-capture {
@@ -207,6 +215,9 @@
   overflow: hidden;
   border: 1px solid var(--f9y-border);
   box-shadow: 0 1px 3px rgba(16, 19, 17, 0.08);
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 .tl-capture-stripe {
@@ -223,26 +234,26 @@
 
 .tl-capture-header {
   background: var(--f9y-black);
-  padding: 26px 28px 22px;
+  padding: 5% 7% 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .tl-capture-headline {
   color: var(--f9y-white);
+  margin: 0;
+  white-space: nowrap;
 }
 
-.tl-capture-subtitle {
-  color: var(--f9y-cream);
-  opacity: 0.85;
-}
-
-#board-title[data-placeholder]:empty::before,
-#board-subtitle[data-placeholder]:empty::before {
+#board-title[data-placeholder]:empty::before {
   content: attr(data-placeholder);
   color: var(--f9y-gray);
 }
 
-#board-title,
-#board-subtitle {
+#board-title {
   outline: none;
   border-radius: 6px;
   padding: 2px 6px;
@@ -250,24 +261,23 @@
 }
 
 #board-title:hover,
-#board-subtitle:hover,
-#board-title:focus,
-#board-subtitle:focus {
+#board-title:focus {
   background: rgba(255, 255, 255, 0.1);
 }
 
 .tl-capture-body {
   background: var(--f9y-cream);
-  padding: 20px 22px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .tl-capture-footer {
   background: var(--f9y-black);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 18px 28px;
+  padding: 0 7%;
+  box-sizing: border-box;
 }
 
 /* --- tiers --- */
@@ -275,7 +285,8 @@
 .tl-tiers {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  height: 100%;
 }
 
 .tl-tier {
@@ -285,6 +296,7 @@
   overflow: hidden;
   border: 1px solid var(--f9y-border);
   background: var(--f9y-surface);
+  flex-shrink: 0;
 }
 
 .tl-tier-label {
@@ -294,9 +306,11 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 10px 8px;
+  padding: 4px 8px;
+  box-sizing: border-box;
   text-align: center;
   color: var(--f9y-black);
+  overflow: hidden;
 }
 
 .tl-tier-name {
@@ -310,6 +324,9 @@
   max-width: 100%;
   word-break: break-word;
   line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tl-tier-name:focus,
@@ -325,16 +342,22 @@
   border-radius: 4px;
   background: transparent;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
+/* Items in a tier lay out on a single line and shrink (sized by JS in
+   layoutBoard()) to fit as more are added, rather than wrapping —
+   that's what keeps a tier row's height fixed regardless of count. */
 .tl-items-row {
   flex: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 8px;
-  padding: 10px;
-  min-height: 76px;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .tl-tier-controls {
@@ -474,10 +497,20 @@
 }
 
 .tl-pool {
+  /* unlike a tier's item row, the pool isn't height-constrained/exported —
+     restore normal wrapping and fixed item size here */
+  flex-wrap: wrap;
+  overflow: visible;
   min-height: 96px;
+  padding: 10px;
   border: 1px dashed var(--f9y-border);
   border-radius: var(--f9y-radius-sm);
   background: var(--f9y-surface);
+}
+
+.tl-pool .tl-item {
+  width: 76px;
+  height: 76px;
 }
 
 .tl-pool.tl-pool-empty::before {
@@ -500,13 +533,8 @@
   display: none !important;
 }
 
-.exporting #board-title:hover,
-.exporting #board-subtitle:hover {
+.exporting #board-title:hover {
   background: transparent;
-}
-
-.exporting .tl-subtitle-empty {
-  display: none;
 }
 
 /* --- toast --- */

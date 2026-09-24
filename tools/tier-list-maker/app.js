@@ -7,6 +7,24 @@
   var MAX_IMAGE_DIM = 240;
   var IMAGE_LOAD_TIMEOUT_MS = 8000;
 
+  // Instagram's optimal feed-post ratio (4:5) — the card is always
+  // exported at exactly this size regardless of how many tiers/items are
+  // on the board; see layoutBoard() for how everything inside adapts.
+  var EXPORT_WIDTH = 1080;
+  var EXPORT_HEIGHT = 1350;
+  var CARD_ASPECT = EXPORT_HEIGHT / EXPORT_WIDTH;
+
+  var HEADER_RATIO = 0.17;
+  var FOOTER_RATIO = 0.05;
+  var TIER_GAP = 4;       // must match .tl-tiers gap in style.css
+  var ITEM_GAP = 6;       // must match .tl-items-row gap in style.css
+  var ITEMS_ROW_PAD_X = 16; // must match .tl-items-row padding (4px 8px) L+R
+  var ITEMS_ROW_PAD_Y = 8;  // must match .tl-items-row padding (4px 8px) T+B
+  var MIN_ITEM_SIZE = 12;
+  var MIN_LABEL_WIDTH = 60;
+  var MAX_LABEL_WIDTH = 140;
+  var LABEL_WIDTH_RATIO = 0.16;
+
   // Conferences in display order for the filter dropdown
   var CONFERENCE_ORDER = [
     'ACC', 'Big Ten', 'Big 12', 'SEC',
@@ -26,8 +44,10 @@
     tiersContainer: document.getElementById('tiers-container'),
     poolContainer: document.getElementById('pool-container'),
     captureRoot: document.getElementById('capture-root'),
+    captureHeader: document.querySelector('.tl-capture-header'),
+    captureBody: document.querySelector('.tl-capture-body'),
+    captureFooter: document.querySelector('.tl-capture-footer'),
     boardTitle: document.getElementById('board-title'),
-    boardSubtitle: document.getElementById('board-subtitle'),
     tierCount: document.getElementById('tier-count'),
     btnAddTier: document.getElementById('btn-add-tier'),
     btnAddImages: document.getElementById('btn-add-images'),
@@ -384,6 +404,93 @@
   }
 
   // ---------------------------------------------------------------------
+  // Layout engine — keeps the card at exactly the Instagram-optimal 4:5
+  // ratio no matter how many tiers/items are on it. Header/footer/each
+  // tier row get an explicit pixel height computed from the card's
+  // current width; each tier's items lay out on a single line (see
+  // .tl-items-row's flex-wrap:nowrap in style.css) and are sized here to
+  // fit whatever's in that row — more logos in a tier means smaller
+  // logos, not a taller row. Re-run after any structural change (tier/
+  // item add/remove/move) and on resize; see saveState() for the main
+  // hook, plus the extra calls in exportPng() around the 'exporting'
+  // class toggle (hiding controls changes the available width).
+  // ---------------------------------------------------------------------
+
+  function layoutBoard() {
+    var width = els.captureRoot.offsetWidth;
+    if (!width) return;
+
+    var height = Math.round(width * CARD_ASPECT);
+    els.captureRoot.style.height = height + 'px';
+
+    var headerH = Math.round(height * HEADER_RATIO);
+    var footerH = Math.round(height * FOOTER_RATIO);
+    var bodyH = height - headerH - footerH;
+
+    els.captureHeader.style.height = headerH + 'px';
+    els.captureFooter.style.height = footerH + 'px';
+    els.captureBody.style.height = bodyH + 'px';
+
+    fitHeadlineFontSize(headerH);
+
+    var tierRows = Array.prototype.slice.call(els.tiersContainer.children);
+    var tierCount = tierRows.length;
+    if (!tierCount) return;
+
+    var totalGap = TIER_GAP * (tierCount - 1);
+    var tierRowH = Math.max(20, Math.floor((bodyH - totalGap) / tierCount));
+
+    var labelWidth = Math.min(MAX_LABEL_WIDTH, Math.max(MIN_LABEL_WIDTH, Math.round(width * LABEL_WIDTH_RATIO)));
+    var labelFontSize = Math.max(9, Math.min(20, Math.round(tierRowH * 0.34)));
+
+    tierRows.forEach(function (row) {
+      row.style.height = tierRowH + 'px';
+
+      var label = row.querySelector('.tl-tier-label');
+      label.style.flex = '0 0 ' + labelWidth + 'px';
+      var nameEl = row.querySelector('.tl-tier-name');
+      nameEl.style.fontSize = labelFontSize + 'px';
+
+      layoutTierItems(row.querySelector('.tl-items-row'), tierRowH);
+    });
+  }
+
+  function layoutTierItems(itemsRow, tierRowH) {
+    var items = Array.prototype.slice.call(itemsRow.children);
+    if (!items.length) return;
+
+    var availableWidth = itemsRow.clientWidth - ITEMS_ROW_PAD_X;
+    var availableHeight = tierRowH - ITEMS_ROW_PAD_Y;
+    var gapTotal = ITEM_GAP * (items.length - 1);
+    var maxByWidth = (availableWidth - gapTotal) / items.length;
+    var itemSize = Math.max(MIN_ITEM_SIZE, Math.floor(Math.min(availableHeight, maxByWidth)));
+
+    items.forEach(function (item) {
+      item.style.width = itemSize + 'px';
+      item.style.height = itemSize + 'px';
+      var textEl = item.querySelector('.tl-item-text');
+      if (textEl) {
+        textEl.style.fontSize = Math.max(7, Math.round(itemSize * 0.2)) + 'px';
+      }
+    });
+  }
+
+  // Headline is sized to dominate the header (per "make the title
+  // bigger"), then shrunk in small steps until it fits on one line —
+  // #board-title has white-space:nowrap, so an untamed size would
+  // otherwise just overflow the card's fixed width.
+  function fitHeadlineFontSize(headerH) {
+    var size = Math.max(18, Math.round(headerH * 0.34));
+    els.boardTitle.style.fontSize = size + 'px';
+    var guard = 0;
+    while (els.boardTitle.scrollWidth > els.boardTitle.clientWidth && size > 9 && guard < 60) {
+      size -= 1;
+      els.boardTitle.style.fontSize = size + 'px';
+      guard++;
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Team browser (FBS roster + conference/P4-G6 filters)
   // ---------------------------------------------------------------------
 
@@ -674,7 +781,6 @@
     return {
       version: 1,
       boardTitle: els.boardTitle.textContent,
-      boardSubtitle: els.boardSubtitle.textContent,
       tiers: tiers,
       pool: pool
     };
@@ -701,6 +807,7 @@
     } catch (e) {
       // storage full or unavailable — non-fatal, just skip autosave
     }
+    layoutBoard();
   }
 
   function loadState() {
@@ -724,7 +831,6 @@
     sortables = [];
 
     els.boardTitle.textContent = state.boardTitle || '';
-    els.boardSubtitle.textContent = state.boardSubtitle || '';
 
     (state.tiers || []).forEach(function (tier) {
       els.tiersContainer.appendChild(createTierElement(tier));
@@ -742,7 +848,6 @@
     return {
       version: 1,
       boardTitle: '',
-      boardSubtitle: '',
       tiers: [
         { id: nextId('tier'), name: 'S', color: DEFAULT_TIER_COLORS[0], items: [] },
         { id: nextId('tier'), name: 'A', color: DEFAULT_TIER_COLORS[1], items: [] },
@@ -764,21 +869,27 @@
       document.activeElement.blur();
     }
 
-    var subtitleEmpty = els.boardSubtitle.textContent.trim().length === 0;
-    els.boardSubtitle.classList.toggle('tl-subtitle-empty', subtitleEmpty);
     if (els.boardTitle.textContent.trim().length === 0) {
       els.boardTitle.textContent = 'MY TIER LIST';
     }
 
     els.captureRoot.classList.add('exporting');
+    // hiding controls/color swatches/remove buttons changes each tier's
+    // available width, so re-run the layout before measuring for capture
+    layoutBoard();
+
     els.btnExport.disabled = true;
     els.btnExport.textContent = 'Exporting…';
 
     window.requestAnimationFrame(function () {
       window.requestAnimationFrame(function () {
+        // scale so the output is always exactly EXPORT_WIDTH wide (and,
+        // since layoutBoard() pins the card to CARD_ASPECT, exactly
+        // EXPORT_HEIGHT tall) regardless of the on-screen render width
+        var scale = EXPORT_WIDTH / els.captureRoot.offsetWidth;
         html2canvas(els.captureRoot, {
-          scale: 2,
-          backgroundColor: getComputedStyle(document.body).getPropertyValue('--f9y-surface').trim(),
+          scale: scale,
+          backgroundColor: null,
           useCORS: true
         }).then(function (canvas) {
           var link = document.createElement('a');
@@ -871,18 +982,12 @@
   });
 
   els.boardTitle.addEventListener('input', function () {
+    fitHeadlineFontSize(els.captureHeader.clientHeight); // live shrink-to-fit while typing
     window.clearTimeout(els.boardTitle._debounce);
     els.boardTitle._debounce = window.setTimeout(saveState, 400);
   });
-  els.boardSubtitle.addEventListener('input', function () {
-    window.clearTimeout(els.boardSubtitle._debounce);
-    els.boardSubtitle._debounce = window.setTimeout(saveState, 400);
-  });
   els.boardTitle.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { e.preventDefault(); els.boardTitle.blur(); }
-  });
-  els.boardSubtitle.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); els.boardSubtitle.blur(); }
   });
 
   ['dragover', 'dragenter'].forEach(function (evt) {
@@ -905,6 +1010,12 @@
     }
   });
 
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(layoutBoard, 100);
+  });
+
   // ---------------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------------
@@ -912,4 +1023,5 @@
   var saved = loadState();
   renderState(saved || buildDefaultState());
   populateConferenceFilter();
+  layoutBoard();
 })();
