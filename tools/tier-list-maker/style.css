@@ -1,0 +1,324 @@
+/* Tier List Maker — tool-specific styles (uses tokens from assets/brand.css) */
+
+.tl-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+
+.tl-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tl-tier-count {
+  font-size: 12px;
+  color: var(--f9y-text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* --- the exportable card --- */
+
+.tl-capture {
+  padding: 28px 28px 22px;
+}
+
+.tl-capture-header {
+  margin-bottom: 20px;
+}
+
+#board-title[data-placeholder]:empty::before,
+#board-subtitle[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--f9y-text-faint);
+}
+
+#board-title,
+#board-subtitle {
+  outline: none;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin-left: -6px;
+}
+
+#board-title:hover,
+#board-subtitle:hover,
+#board-title:focus,
+#board-subtitle:focus {
+  background: var(--f9y-surface-2);
+}
+
+.tl-capture-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--f9y-border);
+}
+
+/* --- tiers --- */
+
+.tl-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tl-tier {
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--f9y-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--f9y-border);
+  background: var(--f9y-surface-2);
+}
+
+.tl-tier-label {
+  flex: 0 0 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 8px;
+  text-align: center;
+  color: #14161a;
+}
+
+.tl-tier-name {
+  font-family: var(--f9y-font-display);
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  outline: none;
+  min-width: 20px;
+  max-width: 100%;
+  word-break: break-word;
+  line-height: 1.15;
+}
+
+.tl-tier-name:focus,
+.tl-tier-name:hover {
+  text-decoration: underline dotted;
+}
+
+.tl-tier-color {
+  width: 22px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tl-items-row {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  padding: 10px;
+  min-height: 76px;
+}
+
+.tl-tier-controls {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px;
+  border-left: 1px solid var(--f9y-border);
+  background: var(--f9y-surface);
+}
+
+.tl-icon-btn {
+  width: 24px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid var(--f9y-border);
+  border-radius: 5px;
+  background: var(--f9y-surface-2);
+  color: var(--f9y-text-dim);
+  cursor: pointer;
+}
+
+.tl-icon-btn:hover {
+  color: var(--f9y-text);
+  border-color: var(--f9y-accent);
+}
+
+.tl-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* --- items (images / text cards) --- */
+
+.tl-item {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--f9y-surface-3);
+  border: 1px solid var(--f9y-border);
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.tl-item:active {
+  cursor: grabbing;
+}
+
+.tl-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.tl-item-text {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.15;
+  outline: none;
+  overflow: hidden;
+}
+
+.tl-item-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(10, 13, 18, 0.75);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.tl-item:hover .tl-item-remove {
+  display: flex;
+}
+
+.tl-item.sortable-ghost {
+  opacity: 0.35;
+}
+
+.tl-item.sortable-chosen .tl-item-img {
+  filter: brightness(1.08);
+}
+
+/* --- pool --- */
+
+.tl-pool-section {
+  margin-top: 24px;
+}
+
+.tl-pool-label {
+  font-family: var(--f9y-font-display);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--f9y-text-dim);
+  margin-bottom: 8px;
+}
+
+.tl-pool-label span {
+  font-family: var(--f9y-font-body);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: var(--f9y-text-faint);
+}
+
+.tl-pool {
+  min-height: 96px;
+  border: 1px dashed var(--f9y-border);
+  border-radius: var(--f9y-radius-sm);
+  background: var(--f9y-surface);
+}
+
+.tl-pool.tl-pool-empty::before {
+  content: 'Drop images here, or use "+ Add Images" above';
+  color: var(--f9y-text-faint);
+  font-size: 13px;
+  padding: 6px;
+}
+
+.tl-pool.tl-drag-over {
+  border-color: var(--f9y-accent);
+  background: var(--f9y-surface-2);
+}
+
+/* --- export state: hide UI chrome that shouldn't appear in the PNG --- */
+
+.exporting .tl-tier-controls,
+.exporting .tl-tier-color,
+.exporting .tl-item-remove {
+  display: none !important;
+}
+
+.exporting #board-title:hover,
+.exporting #board-subtitle:hover {
+  background: transparent;
+}
+
+.exporting .tl-subtitle-empty {
+  display: none;
+}
+
+/* --- toast --- */
+
+.tl-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  background: var(--f9y-surface-3);
+  border: 1px solid var(--f9y-accent);
+  color: var(--f9y-text);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  z-index: 50;
+}
+
+@media (max-width: 640px) {
+  .tl-tier-label {
+    flex-basis: 84px;
+  }
+  .tl-item {
+    width: 64px;
+    height: 64px;
+  }
+}

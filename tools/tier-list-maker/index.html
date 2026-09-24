@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tier List Maker — Full 9 Yards</title>
+<link rel="stylesheet" href="../../assets/brand.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="f9y-shell">
+  <div class="f9y-topbar">
+    <a class="f9y-logo" href="../../index.html">
+      <span class="f9y-logo-mark">FULL 9 YARDS</span>
+      <span class="f9y-logo-sub">Graphic Tools</span>
+    </a>
+    <div class="f9y-topbar-nav">
+      <a href="../../index.html">&larr; All Tools</a>
+    </div>
+  </div>
+
+  <div class="tl-toolbar f9y-card">
+    <div class="tl-toolbar-group">
+      <button id="btn-add-tier" class="f9y-btn f9y-btn-primary">+ Add Tier</button>
+      <span id="tier-count" class="tl-tier-count">6 / 20 tiers</span>
+    </div>
+    <div class="tl-toolbar-group">
+      <button id="btn-add-images" class="f9y-btn">+ Add Images</button>
+      <input id="file-input" type="file" accept="image/*" multiple hidden>
+      <button id="btn-add-text" class="f9y-btn">+ Add Text Card</button>
+    </div>
+    <div class="tl-toolbar-group">
+      <button id="btn-reset" class="f9y-btn f9y-btn-ghost f9y-btn-danger">Reset</button>
+      <button id="btn-export" class="f9y-btn f9y-btn-primary">Export PNG</button>
+    </div>
+  </div>
+
+  <!-- everything inside #capture-root gets exported to PNG -->
+  <div id="capture-root" class="f9y-card tl-capture">
+    <header class="tl-capture-header">
+      <div class="f9y-eyebrow">Full 9 Yards</div>
+      <h1 id="board-title" class="f9y-headline" contenteditable="true" data-placeholder="MY TIER LIST"></h1>
+      <p id="board-subtitle" class="f9y-subtitle" contenteditable="true" data-placeholder="Add a subtitle (optional)"></p>
+    </header>
+
+    <div id="tiers-container" class="tl-tiers"></div>
+
+    <footer class="tl-capture-footer">
+      <span class="f9y-tagline">Make Your Call.</span>
+      <span class="f9y-meta">Full 9 Yards — Tier List Maker</span>
+    </footer>
+  </div>
+
+  <section class="tl-pool-section">
+    <div class="tl-pool-label">Item Pool <span>— drag items up into a tier</span></div>
+    <div id="pool-container" class="tl-items-row tl-pool" data-tier-id="pool"></div>
+  </section>
+
+  <div class="f9y-footer">Full 9 Yards — Tier List Maker</div>
+</div>
+
+<div id="toast" class="tl-toast" hidden></div>
+
+<script src="../../assets/vendor/sortable.min.js"></script>
+<script src="../../assets/vendor/html2canvas.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

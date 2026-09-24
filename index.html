@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Full 9 Yards — Graphic Tools</title>
+<link rel="stylesheet" href="assets/brand.css">
+<style>
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .tool-card {
+    padding: 22px;
+    text-decoration: none;
+    color: var(--f9y-text);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .tool-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--f9y-accent);
+  }
+  .tool-card-icon {
+    font-size: 26px;
+  }
+  .tool-card h2 {
+    font-family: var(--f9y-font-display);
+    text-transform: uppercase;
+    font-size: 19px;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+  .tool-card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--f9y-text-dim);
+    flex-grow: 1;
+  }
+  .tool-card-open {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--f9y-accent);
+  }
+  .coming-soon {
+    opacity: 0.5;
+  }
+  .coming-soon:hover {
+    transform: none;
+    border-color: var(--f9y-border);
+  }
+  .intro {
+    max-width: 680px;
+  }
+</style>
+</head>
+<body>
+<div class="f9y-shell">
+  <div class="f9y-topbar">
+    <a class="f9y-logo" href="index.html">
+      <span class="f9y-logo-mark">FULL 9 YARDS</span>
+      <span class="f9y-logo-sub">Graphic Tools</span>
+    </a>
+  </div>
+
+  <div class="intro">
+    <div class="f9y-eyebrow">Full 9 Yards</div>
+    <h1 class="f9y-headline">Graphic Tools</h1>
+    <p class="f9y-subtitle">
+      A home base for the graphics-making tools behind Full 9 Yards content —
+      built to export clean, on-brand images ready to post.
+    </p>
+  </div>
+
+  <div class="tools-grid">
+    <a class="tool-card f9y-card" href="tools/tier-list-maker/">
+      <div class="tool-card-icon">🏈</div>
+      <h2>Tier List Maker</h2>
+      <p>Build a branded tier list with up to 20 nameable tiers, drag in
+        images or text, and export a social-ready PNG.</p>
+      <div class="tool-card-open">Open tool →</div>
+    </a>
+
+    <div class="tool-card f9y-card coming-soon">
+      <div class="tool-card-icon">📊</div>
+      <h2>More tools coming</h2>
+      <p>The rest of the Full 9 Yards graphics pipeline (charts, GIFs, and
+        more) will land here next.</p>
+    </div>
+  </div>
+
+  <div class="f9y-footer">Full 9 Yards — Graphic Tools</div>
+</div>
+</body>
+</html>

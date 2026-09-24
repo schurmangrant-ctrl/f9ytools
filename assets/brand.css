@@ -1,0 +1,230 @@
+/*
+  Full 9 Yards — shared brand tokens & base styles.
+
+  These are PLACEHOLDER values (colors/fonts) until the real
+  graphics/branding.py palette + fonts are ported over. Every tool in
+  this repo should import this file and use these tokens/classes
+  instead of hardcoding colors, so a future swap happens in one place.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* surfaces */
+  --f9y-bg: #0a0d12;
+  --f9y-surface: #131820;
+  --f9y-surface-2: #1b222d;
+  --f9y-surface-3: #232c39;
+  --f9y-border: #2b3542;
+
+  /* text */
+  --f9y-text: #f4f6f8;
+  --f9y-text-dim: #98a3b3;
+  --f9y-text-faint: #5c6675;
+
+  /* brand accents */
+  --f9y-accent: #f2a71b;      /* gold */
+  --f9y-accent-ink: #1a1204;  /* text-on-accent */
+  --f9y-accent-2: #34c77b;    /* turf green, secondary */
+  --f9y-danger: #e5484d;
+
+  /* classic tier palette (used as defaults, fully user-editable) */
+  --f9y-tier-1: #ff5c5c;
+  --f9y-tier-2: #ff9f43;
+  --f9y-tier-3: #ffd43b;
+  --f9y-tier-4: #6bcb77;
+  --f9y-tier-5: #4dabf7;
+  --f9y-tier-6: #9775fa;
+
+  /* type */
+  --f9y-font-display: 'Anton', 'Arial Narrow', sans-serif;
+  --f9y-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --f9y-radius: 14px;
+  --f9y-radius-sm: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--f9y-bg);
+  color: var(--f9y-text);
+  font-family: var(--f9y-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button, input, textarea {
+  font-family: inherit;
+}
+
+.f9y-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+}
+
+/* --- top bar (used on every page) --- */
+
+.f9y-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 0 26px;
+}
+
+.f9y-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--f9y-text);
+}
+
+.f9y-logo-mark {
+  font-family: var(--f9y-font-display);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--f9y-accent);
+}
+
+.f9y-logo-sub {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--f9y-text-dim);
+  text-transform: uppercase;
+}
+
+.f9y-topbar-nav a {
+  font-size: 14px;
+  color: var(--f9y-text-dim);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid var(--f9y-border);
+  border-radius: 999px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.f9y-topbar-nav a:hover {
+  color: var(--f9y-text);
+  border-color: var(--f9y-accent);
+}
+
+/* --- typography classes reused across tools & exports --- */
+
+.f9y-eyebrow {
+  font-family: var(--f9y-font-display);
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  color: var(--f9y-accent);
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+
+.f9y-headline {
+  font-family: var(--f9y-font-display);
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  margin: 0 0 8px;
+}
+
+.f9y-subtitle {
+  font-size: 15px;
+  color: var(--f9y-text-dim);
+  margin: 0;
+  max-width: 640px;
+}
+
+.f9y-tagline {
+  font-family: var(--f9y-font-display);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--f9y-accent);
+  text-transform: uppercase;
+}
+
+.f9y-meta {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--f9y-text-faint);
+  text-transform: uppercase;
+}
+
+/* --- shared card surface --- */
+
+.f9y-card {
+  background: var(--f9y-surface);
+  border: 1px solid var(--f9y-border);
+  border-radius: var(--f9y-radius);
+}
+
+/* --- buttons --- */
+
+.f9y-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--f9y-radius-sm);
+  border: 1px solid var(--f9y-border);
+  background: var(--f9y-surface-2);
+  color: var(--f9y-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.f9y-btn:hover {
+  border-color: var(--f9y-accent);
+}
+
+.f9y-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.f9y-btn-primary {
+  background: var(--f9y-accent);
+  border-color: var(--f9y-accent);
+  color: var(--f9y-accent-ink);
+}
+
+.f9y-btn-primary:hover {
+  filter: brightness(1.08);
+  border-color: var(--f9y-accent);
+}
+
+.f9y-btn-ghost {
+  background: transparent;
+}
+
+.f9y-btn-danger:hover {
+  border-color: var(--f9y-danger);
+  color: var(--f9y-danger);
+}
+
+.f9y-btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.f9y-footer {
+  text-align: center;
+  padding: 40px 0 10px;
+  color: var(--f9y-text-faint);
+  font-size: 12px;
+}
