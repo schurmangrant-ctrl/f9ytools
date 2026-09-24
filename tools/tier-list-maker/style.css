@@ -386,7 +386,11 @@
 .tl-items-row {
   flex: 1;
   display: flex;
-  flex-wrap: nowrap;
+  /* wraps onto additional lines past MAX_ITEMS_PER_ROW (app.js), each
+     line's item size computed to fit the tier's fixed row height —
+     more items means more/smaller lines, not one ever-shrinking line */
+  flex-wrap: wrap;
+  align-content: center;
   align-items: center;
   gap: 6px;
   padding: 4px 8px;

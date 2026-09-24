@@ -22,6 +22,7 @@
   var ITEMS_ROW_PAD_X = 16; // must match .tl-items-row padding (4px 8px) L+R
   var ITEMS_ROW_PAD_Y = 8;  // must match .tl-items-row padding (4px 8px) T+B
   var MIN_ITEM_SIZE = 12;
+  var MAX_ITEMS_PER_ROW = 10; // beyond this, items stack onto additional lines
   var MIN_LABEL_WIDTH = 60;
   var MAX_LABEL_WIDTH = 140;
   var LABEL_WIDTH_RATIO = 0.16;
@@ -534,11 +535,23 @@
     var items = Array.prototype.slice.call(itemsRow.children);
     if (!items.length) return;
 
+    // Beyond MAX_ITEMS_PER_ROW, items stack onto additional lines instead
+    // of shrinking indefinitely into one long sliver — e.g. 11-20 items
+    // becomes 2 lines, 21-30 becomes 3, etc. Rows split as evenly as
+    // possible (11 items -> 6 + 5, not 10 + 1).
+    var rows = items.length <= MAX_ITEMS_PER_ROW ? 1 : Math.ceil(items.length / MAX_ITEMS_PER_ROW);
+    var itemsPerRow = Math.ceil(items.length / rows);
+
     var availableWidth = itemsRow.clientWidth - ITEMS_ROW_PAD_X;
     var availableHeight = tierRowH - ITEMS_ROW_PAD_Y;
-    var gapTotal = ITEM_GAP * (items.length - 1);
-    var maxByWidth = (availableWidth - gapTotal) / items.length;
-    var itemSize = Math.max(MIN_ITEM_SIZE, Math.floor(Math.min(availableHeight, maxByWidth)));
+
+    var rowGapTotal = ITEM_GAP * (rows - 1);
+    var heightPerRow = (availableHeight - rowGapTotal) / rows;
+
+    var colGapTotal = ITEM_GAP * (itemsPerRow - 1);
+    var widthPerItem = (availableWidth - colGapTotal) / itemsPerRow;
+
+    var itemSize = Math.max(MIN_ITEM_SIZE, Math.floor(Math.min(heightPerRow, widthPerItem)));
 
     items.forEach(function (item) {
       item.style.width = itemSize + 'px';
