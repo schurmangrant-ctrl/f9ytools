@@ -263,7 +263,9 @@
 .tl-capture-logo {
   flex: 0 0 auto;
   align-self: center;
-  height: 62%;
+  /* height is set inline by syncLogoHeightToTitle() in app.js, matching
+     the headline's actual rendered height rather than a guessed ratio */
+  height: 55%;
   width: auto;
   object-fit: contain;
 }

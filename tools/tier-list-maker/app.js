@@ -16,7 +16,7 @@
 
   var HEADER_RATIO = 0.17;
   var FOOTER_RATIO = 0.05;
-  var PAD_X_RATIO = 0.06; // shared header/body/footer horizontal inset
+  var PAD_X_RATIO = 0.032; // shared header/body/footer horizontal inset — kept small so tier rows run wide
   var TIER_GAP = 4;       // must match .tl-tiers gap in style.css
   var ITEM_GAP = 6;       // must match .tl-items-row gap in style.css
   var ITEMS_ROW_PAD_X = 16; // must match .tl-items-row padding (4px 8px) L+R
@@ -48,6 +48,7 @@
     captureHeader: document.querySelector('.tl-capture-header'),
     captureBody: document.querySelector('.tl-capture-body'),
     captureFooter: document.querySelector('.tl-capture-footer'),
+    captureLogo: document.querySelector('.tl-capture-logo'),
     boardTitle: document.getElementById('board-title'),
     tierCount: document.getElementById('tier-count'),
     btnAddTier: document.getElementById('btn-add-tier'),
@@ -56,6 +57,7 @@
     btnAddText: document.getElementById('btn-add-text'),
     btnReset: document.getElementById('btn-reset'),
     btnExport: document.getElementById('btn-export'),
+    exportResolution: document.getElementById('export-resolution'),
     toast: document.getElementById('toast'),
 
     btnToggleTeams: document.getElementById('btn-toggle-teams'),
@@ -450,6 +452,11 @@
     els.captureBody.style.height = bodyH + 'px';
 
     fitHeadlineFontSize(headerH);
+    syncLogoHeightToTitle();
+    // the logo's width just changed, which can shift how much horizontal
+    // space the title has left in the header's flex row — re-fit once
+    // more against that updated width for an exact result
+    fitHeadlineFontSize(headerH);
 
     var tierRows = Array.prototype.slice.call(els.tiersContainer.children);
     var tierCount = tierRows.length;
@@ -547,6 +554,17 @@
   // bigger"), then shrunk in small steps until it fits on one line —
   // #board-title has white-space:nowrap, so an untamed size would
   // otherwise just overflow the card's fixed width.
+  // Sizes the logo mark to match the headline's actual rendered height
+  // (not a guessed percentage of the header, and not the source PNG's
+  // own dimensions — that file has some transparent margin baked in) so
+  // the wordmark and the badge read as the same visual scale.
+  function syncLogoHeightToTitle() {
+    if (!els.captureLogo || !els.captureLogo.naturalHeight) return;
+    var titleH = els.boardTitle.getBoundingClientRect().height;
+    if (!titleH) return;
+    els.captureLogo.style.height = Math.round(titleH) + 'px';
+  }
+
   function fitHeadlineFontSize(headerH) {
     var size = Math.max(18, Math.round(headerH * 0.46));
     els.boardTitle.style.fontSize = size + 'px';
@@ -932,6 +950,11 @@
   // Export
   // ---------------------------------------------------------------------
 
+  function getResolutionMultiplier() {
+    var val = parseInt(els.exportResolution && els.exportResolution.value, 10);
+    return val > 0 ? val : 2;
+  }
+
   function exportPng() {
     if (document.activeElement && document.activeElement.blur) {
       document.activeElement.blur();
@@ -966,11 +989,17 @@
         // scale so the output is always exactly EXPORT_WIDTH wide (and,
         // since layoutBoard() pins the card to CARD_ASPECT, exactly
         // EXPORT_HEIGHT tall) regardless of the on-screen render width
-        var scale = EXPORT_WIDTH / els.captureRoot.offsetWidth;
+        var scale = (EXPORT_WIDTH * getResolutionMultiplier()) / els.captureRoot.offsetWidth;
         return html2canvas(els.captureRoot, {
           scale: scale,
           backgroundColor: null,
-          useCORS: true
+          useCORS: true,
+          // html2canvas measures text on an offscreen canvas per-string by
+          // default, which can silently fall back to different metrics
+          // than the live DOM for a custom @font-face and bunch/overlap
+          // characters together — rendering letter-by-letter avoids that
+          // mismatch at the cost of a little performance.
+          letterRendering: true
         });
       })();
     }).then(function (canvas) {
@@ -1099,6 +1128,10 @@
   // ---------------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------------
+
+  if (els.captureLogo && !els.captureLogo.complete) {
+    els.captureLogo.addEventListener('load', layoutBoard);
+  }
 
   var saved = loadState();
   renderState(saved || buildDefaultState());
