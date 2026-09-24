@@ -1,47 +1,78 @@
 /*
   Full 9 Yards — shared brand tokens & base styles.
 
-  These are PLACEHOLDER values (colors/fonts) until the real
-  graphics/branding.py palette + fonts are ported over. Every tool in
-  this repo should import this file and use these tokens/classes
-  instead of hardcoding colors, so a future swap happens in one place.
+  Ported directly from graphics/branding.py + graphics/scatter.py (the
+  real chart/card pipeline): black header/footer bars, cream body, green
+  accent stripe, Barlow Condensed Black headlines/taglines, DM Mono
+  labels/meta/body text. Every tool in this repo should import this file
+  and use these tokens/classes instead of hardcoding colors/fonts, so a
+  future brand tweak happens in one place.
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+@font-face {
+  font-family: 'F9Y Display';
+  src: url('fonts/BarlowCondensed-Black.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'F9Y Mono';
+  src: url('fonts/DMMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'F9Y Mono';
+  src: url('fonts/DMMono-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
-  /* surfaces */
-  --f9y-bg: #0a0d12;
-  --f9y-surface: #131820;
-  --f9y-surface-2: #1b222d;
-  --f9y-surface-3: #232c39;
-  --f9y-border: #2b3542;
+  /* Full 9 Yards brand palette — source of truth is graphics/branding.py's BRAND dict */
+  --f9y-black: #101311;
+  --f9y-cream: #EFEDE7;
+  --f9y-green: #3F7954;
+  --f9y-white: #FFFFFF;
+  --f9y-gray: #8A8A85;    /* meta text on black */
+  --f9y-subtext: #5c5c58; /* secondary text on cream */
+  --f9y-grid: #d8d5cc;    /* borders/dividers on cream */
+  --f9y-gold: #D4AF37;    /* reserved: "highlight/award" callouts only, never a UI accent */
 
-  /* text */
-  --f9y-text: #f4f6f8;
-  --f9y-text-dim: #98a3b3;
-  --f9y-text-faint: #5c6675;
+  /* semantic tokens the UI is built from — map to the brand palette above */
+  --f9y-bg: var(--f9y-cream);
+  --f9y-surface: #ffffff;
+  --f9y-surface-2: #e8e5db;
+  --f9y-surface-3: #dcd8cc;
+  --f9y-border: var(--f9y-grid);
 
-  /* brand accents */
-  --f9y-accent: #f2a71b;      /* gold */
-  --f9y-accent-ink: #1a1204;  /* text-on-accent */
-  --f9y-accent-2: #34c77b;    /* turf green, secondary */
-  --f9y-danger: #e5484d;
+  --f9y-text: var(--f9y-black);
+  --f9y-text-dim: var(--f9y-subtext);
+  --f9y-text-faint: var(--f9y-gray);
+
+  --f9y-accent: var(--f9y-green);
+  --f9y-accent-ink: var(--f9y-white);
+  --f9y-danger: #a8402f;
 
   /* classic tier palette (used as defaults, fully user-editable) */
-  --f9y-tier-1: #ff5c5c;
-  --f9y-tier-2: #ff9f43;
-  --f9y-tier-3: #ffd43b;
-  --f9y-tier-4: #6bcb77;
-  --f9y-tier-5: #4dabf7;
-  --f9y-tier-6: #9775fa;
+  --f9y-tier-1: #c0524a;
+  --f9y-tier-2: #cf8a3f;
+  --f9y-tier-3: #c7ad4a;
+  --f9y-tier-4: #5f9468;
+  --f9y-tier-5: #4a7f96;
+  --f9y-tier-6: #7a6a9e;
 
   /* type */
-  --f9y-font-display: 'Anton', 'Arial Narrow', sans-serif;
-  --f9y-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --f9y-font-display: 'F9Y Display', 'Arial Narrow', sans-serif;
+  --f9y-font-body: 'F9Y Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
 
-  --f9y-radius: 14px;
-  --f9y-radius-sm: 8px;
+  --f9y-radius: 10px;
+  --f9y-radius-sm: 6px;
 }
 
 * {
@@ -57,7 +88,10 @@ body {
   background: var(--f9y-bg);
   color: var(--f9y-text);
   font-family: var(--f9y-font-body);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
+  /* only real weights we shipped (400/500 mono, 400 display) — never fake-bold/italic */
+  font-synthesis: none;
 }
 
 a {
@@ -94,20 +128,25 @@ button, input, textarea {
 
 .f9y-logo-mark {
   font-family: var(--f9y-font-display);
+  font-weight: 400;
   font-size: 20px;
-  letter-spacing: 0.04em;
-  color: var(--f9y-accent);
+  letter-spacing: 0.02em;
+  color: var(--f9y-green);
 }
 
 .f9y-logo-sub {
+  font-family: var(--f9y-font-body);
+  font-weight: 500;
   font-size: 12px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   color: var(--f9y-text-dim);
   text-transform: uppercase;
 }
 
 .f9y-topbar-nav a {
-  font-size: 14px;
+  font-family: var(--f9y-font-body);
+  font-weight: 500;
+  font-size: 13px;
   color: var(--f9y-text-dim);
   text-decoration: none;
   padding: 8px 14px;
@@ -118,22 +157,31 @@ button, input, textarea {
 
 .f9y-topbar-nav a:hover {
   color: var(--f9y-text);
-  border-color: var(--f9y-accent);
+  border-color: var(--f9y-green);
 }
 
-/* --- typography classes reused across tools & exports --- */
+/*
+  --- typography classes matching graphics/branding.py exactly ---
+  eyebrow: DM Mono Medium, green, uppercase, wide tracking
+  headline: Barlow Condensed Black — the dominant element
+  subtitle: DM Mono Regular
+  tagline: Barlow Condensed Black, green, uppercase
+  meta: DM Mono Regular, gray/faint, uppercase
+*/
 
 .f9y-eyebrow {
-  font-family: var(--f9y-font-display);
-  font-size: 14px;
-  letter-spacing: 0.22em;
-  color: var(--f9y-accent);
+  font-family: var(--f9y-font-body);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--f9y-green);
   text-transform: uppercase;
   margin: 0 0 6px;
 }
 
 .f9y-headline {
   font-family: var(--f9y-font-display);
+  font-weight: 400;
   font-size: clamp(28px, 4vw, 44px);
   letter-spacing: 0.01em;
   text-transform: uppercase;
@@ -142,6 +190,8 @@ button, input, textarea {
 }
 
 .f9y-subtitle {
+  font-family: var(--f9y-font-body);
+  font-weight: 400;
   font-size: 15px;
   color: var(--f9y-text-dim);
   margin: 0;
@@ -150,13 +200,16 @@ button, input, textarea {
 
 .f9y-tagline {
   font-family: var(--f9y-font-display);
-  font-size: 13px;
-  letter-spacing: 0.14em;
-  color: var(--f9y-accent);
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--f9y-green);
   text-transform: uppercase;
 }
 
 .f9y-meta {
+  font-family: var(--f9y-font-body);
+  font-weight: 400;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--f9y-text-faint);
@@ -177,19 +230,20 @@ button, input, textarea {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-family: var(--f9y-font-body);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   padding: 9px 16px;
   border-radius: var(--f9y-radius-sm);
   border: 1px solid var(--f9y-border);
-  background: var(--f9y-surface-2);
+  background: var(--f9y-surface);
   color: var(--f9y-text);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
 }
 
 .f9y-btn:hover {
-  border-color: var(--f9y-accent);
+  border-color: var(--f9y-green);
 }
 
 .f9y-btn:disabled {

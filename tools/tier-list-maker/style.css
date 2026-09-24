@@ -23,20 +23,52 @@
   letter-spacing: 0.04em;
 }
 
-/* --- the exportable card --- */
+/*
+  --- the exportable card ---
+  Mirrors graphics/branding.py's render_branded_card frame exactly:
+  green left stripe, black header (eyebrow/headline/subtitle), cream
+  body (the tiers), black footer (tagline/meta).
+*/
 
 .tl-capture {
-  padding: 28px 28px 22px;
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--f9y-radius);
+  overflow: hidden;
+  border: 1px solid var(--f9y-border);
+  box-shadow: 0 1px 3px rgba(16, 19, 17, 0.08);
+}
+
+.tl-capture-stripe {
+  flex: 0 0 10px;
+  background: var(--f9y-green);
+}
+
+.tl-capture-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .tl-capture-header {
-  margin-bottom: 20px;
+  background: var(--f9y-black);
+  padding: 26px 28px 22px;
+}
+
+.tl-capture-headline {
+  color: var(--f9y-white);
+}
+
+.tl-capture-subtitle {
+  color: var(--f9y-cream);
+  opacity: 0.85;
 }
 
 #board-title[data-placeholder]:empty::before,
 #board-subtitle[data-placeholder]:empty::before {
   content: attr(data-placeholder);
-  color: var(--f9y-text-faint);
+  color: var(--f9y-gray);
 }
 
 #board-title,
@@ -51,17 +83,21 @@
 #board-subtitle:hover,
 #board-title:focus,
 #board-subtitle:focus {
-  background: var(--f9y-surface-2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tl-capture-body {
+  background: var(--f9y-cream);
+  padding: 20px 22px;
 }
 
 .tl-capture-footer {
+  background: var(--f9y-black);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 22px;
-  padding-top: 14px;
-  border-top: 1px solid var(--f9y-border);
+  padding: 18px 28px;
 }
 
 /* --- tiers --- */
@@ -78,7 +114,7 @@
   border-radius: var(--f9y-radius-sm);
   overflow: hidden;
   border: 1px solid var(--f9y-border);
-  background: var(--f9y-surface-2);
+  background: var(--f9y-surface);
 }
 
 .tl-tier-label {
@@ -90,11 +126,12 @@
   gap: 4px;
   padding: 10px 8px;
   text-align: center;
-  color: #14161a;
+  color: var(--f9y-black);
 }
 
 .tl-tier-name {
   font-family: var(--f9y-font-display);
+  font-weight: 400;
   font-size: 17px;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -138,7 +175,7 @@
   gap: 4px;
   padding: 6px;
   border-left: 1px solid var(--f9y-border);
-  background: var(--f9y-surface);
+  background: var(--f9y-surface-2);
 }
 
 .tl-icon-btn {
@@ -174,8 +211,9 @@
   height: 76px;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--f9y-surface-3);
+  background: var(--f9y-surface-2);
   border: 1px solid var(--f9y-border);
+  color: var(--f9y-black);
   cursor: grab;
   flex-shrink: 0;
 }
@@ -200,9 +238,12 @@
   justify-content: center;
   text-align: center;
   padding: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.15;
+  font-family: var(--f9y-font-display);
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  line-height: 1.1;
   outline: none;
   overflow: hidden;
 }
@@ -215,7 +256,7 @@
   height: 18px;
   border: none;
   border-radius: 50%;
-  background: rgba(10, 13, 18, 0.75);
+  background: rgba(16, 19, 17, 0.75);
   color: #fff;
   font-size: 12px;
   line-height: 1;
@@ -246,6 +287,7 @@
 
 .tl-pool-label {
   font-family: var(--f9y-font-display);
+  font-weight: 400;
   text-transform: uppercase;
   font-size: 13px;
   letter-spacing: 0.08em;

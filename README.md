@@ -43,15 +43,24 @@ install step, no CDN dependency, and no build step required.
 
 ## Branding
 
-`assets/brand.css` currently uses **placeholder** colors/fonts (dark
-surface + gold accent, `Anton`/`Inter`), matching the look implied by the
-existing Full 9 Yards chart pipeline (`FULL 9 YARDS` eyebrow, bold
-all-caps headline, `MAKE YOUR CALL.` tagline, small meta footer) — but not
-the exact palette.
+`assets/brand.css` is ported directly from the real chart pipeline
+(`graphics/branding.py` + `graphics/scatter.py`):
 
-Once the real `graphics/branding.py` values (hex colors, fonts, logo file)
-are available, port them into the `:root` variables at the top of
-`assets/brand.css` and every tool picks them up automatically.
+- **Colors** — black `#101311` header/footer bars, cream `#EFEDE7` body,
+  green `#3F7954` accent (eyebrow, tagline, left border stripe), white
+  headline text, gray `#8A8A85` meta text. Gold `#D4AF37` is reserved for
+  "highlight/award" callouts only, never used as a general UI accent.
+- **Fonts** — self-hosted under `assets/fonts/`: Barlow Condensed Black
+  for headlines/taglines, DM Mono (Regular + Medium) for eyebrow,
+  subtitle, meta, and body/UI text.
+- **Card frame** — the Tier List Maker's exportable card mirrors
+  `render_branded_card()`'s layout exactly: green left stripe, black
+  header (eyebrow + headline + subtitle), cream body, black footer
+  (tagline + meta).
+
+Every tool should pull from the `:root` tokens in `assets/brand.css`
+rather than hardcoding colors/fonts, so a future brand tweak (e.g. a
+logo mark) happens in one place.
 
 ## Adding a new tool
 

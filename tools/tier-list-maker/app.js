@@ -5,9 +5,12 @@
   var STORAGE_KEY = 'f9y-tier-list-v1';
   var MAX_IMAGE_DIM = 240;
 
+  // Muted, editorial tones that sit well on the brand's cream body —
+  // matches assets/brand.css's --f9y-tier-* tokens (first 6), extended
+  // to 10 for cycling through up to MAX_TIERS.
   var DEFAULT_TIER_COLORS = [
-    '#ff5c5c', '#ff9f43', '#ffd43b', '#6bcb77', '#4dabf7', '#9775fa',
-    '#f783ac', '#63e6be', '#ffa8a8', '#a9e34b'
+    '#c0524a', '#cf8a3f', '#c7ad4a', '#5f9468', '#4a7f96', '#7a6a9e',
+    '#a15c7e', '#4a9a8f', '#a37b3f', '#6c7a8c'
   ];
 
   var els = {
