@@ -29,6 +29,12 @@ Build a branded tier list and export it as a PNG for socials.
 
 - Up to 20 tiers, each with an editable name and color
 - Add items as uploaded images or text cards
+- **Team Browser** ("+ Add Teams"): every FBS team, filterable by
+  conference or by Power 4 / Group of 6 / Independent, with search and a
+  bulk "Add All Shown to Pool". Teams without a real logo wired in show a
+  colored initials chip (using the team's actual colors) instead of a
+  broken image, so the feature works immediately. See "Team logos" below
+  for wiring in real logo images.
 - Drag and drop items between tiers and the item pool (touch-friendly)
 - Editable board title/subtitle
 - "Export PNG" renders just the branded card (no UI chrome) at 2x
@@ -40,6 +46,31 @@ Uses [SortableJS](https://github.com/SortableJS/Sortable) for drag-and-drop
 and [html2canvas](https://github.com/niklasvh/html2canvas) for PNG export,
 both vendored (unmodified, minified builds) under `assets/vendor/` — no
 install step, no CDN dependency, and no build step required.
+
+#### Team data (`teams-data.js`)
+
+The full FBS roster (name, conference, Power 4 / Group of 6 / Independent
+classification, and placeholder colors) lives in
+`tools/tier-list-maker/teams-data.js` as a plain, commented array —
+conference realignment moves fast, so double-check the Mountain West and
+Pac-12 sections especially, and edit directly if anything's out of date.
+
+#### Team logos
+
+No real logo images are bundled yet — team chips currently render as
+colored initials. To wire in real logos, click **Import Logos…** in the
+Team Browser and paste a JSON object shaped like your existing
+`team_logo_lookup()` output: `{"Alabama": "https://...", ...}`. Matching
+is case/punctuation-insensitive and also checks each team's `aliases` in
+`teams-data.js`. This is saved to that browser's local storage only.
+
+When a logo URL resolves, the tool immediately loads the image into a
+canvas and bakes it down to a local data URL (same treatment as an
+uploaded file) rather than keeping a live hotlink — this keeps the board
+portable/offline and avoids PNG export breaking on cross-origin images
+that don't send CORS headers. If a URL fails to load for any reason, the
+team silently falls back to its colored initials chip instead of a broken
+image.
 
 ## Branding
 

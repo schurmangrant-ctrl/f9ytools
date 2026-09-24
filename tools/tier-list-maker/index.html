@@ -28,12 +28,32 @@
       <button id="btn-add-images" class="f9y-btn">+ Add Images</button>
       <input id="file-input" type="file" accept="image/*" multiple hidden>
       <button id="btn-add-text" class="f9y-btn">+ Add Text Card</button>
+      <button id="btn-toggle-teams" class="f9y-btn">🏈 Add Teams</button>
     </div>
     <div class="tl-toolbar-group">
       <button id="btn-reset" class="f9y-btn f9y-btn-ghost f9y-btn-danger">Reset</button>
       <button id="btn-export" class="f9y-btn f9y-btn-primary">Export PNG</button>
     </div>
   </div>
+
+  <section id="team-browser" class="f9y-card tl-team-browser" hidden>
+    <div class="tl-team-browser-controls">
+      <input id="team-search" type="text" class="tl-team-search" placeholder="Search teams…">
+      <select id="team-conf-filter" class="tl-team-select"></select>
+      <select id="team-class-filter" class="tl-team-select">
+        <option value="all">All (P4 + G6 + Independents)</option>
+        <option value="P4">Power 4 only</option>
+        <option value="G6">Group of 6 only</option>
+        <option value="IND">Independents only</option>
+      </select>
+      <button id="btn-import-logos" class="f9y-btn f9y-btn-sm">Import Logos…</button>
+      <span id="team-result-count" class="tl-tier-count"></span>
+    </div>
+    <div id="team-grid" class="tl-team-grid"></div>
+    <div class="tl-team-browser-actions">
+      <button id="btn-add-all-filtered" class="f9y-btn f9y-btn-sm f9y-btn-primary">+ Add All Shown to Pool</button>
+    </div>
+  </section>
 
   <!-- everything inside #capture-root gets exported to PNG — mirrors the
        Full 9 Yards post frame: green stripe, black header/footer, cream body -->
@@ -67,8 +87,27 @@
 
 <div id="toast" class="tl-toast" hidden></div>
 
+<div id="import-modal" class="tl-modal-overlay" hidden>
+  <div class="tl-modal f9y-card">
+    <h3 class="tl-modal-title">Import Team Logos</h3>
+    <p class="tl-modal-help">
+      Paste a JSON object mapping team name → logo URL (the same shape as
+      <code>team_logo_lookup()</code>), e.g.
+      <code>{"Alabama": "https://…", "Ohio State": "https://…"}</code>.
+      Saved to this browser only.
+    </p>
+    <textarea id="import-textarea" class="tl-modal-textarea" placeholder='{"Alabama": "https://...", "Ohio State": "https://..."}'></textarea>
+    <div class="tl-modal-actions">
+      <button id="btn-import-cancel" class="f9y-btn f9y-btn-ghost">Cancel</button>
+      <button id="btn-import-clear" class="f9y-btn f9y-btn-ghost f9y-btn-danger">Clear Saved Logos</button>
+      <button id="btn-import-save" class="f9y-btn f9y-btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
 <script src="../../assets/vendor/sortable.min.js"></script>
 <script src="../../assets/vendor/html2canvas.min.js"></script>
+<script src="teams-data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

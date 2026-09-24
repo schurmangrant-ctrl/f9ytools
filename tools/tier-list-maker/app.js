@@ -3,7 +3,16 @@
 
   var MAX_TIERS = 20;
   var STORAGE_KEY = 'f9y-tier-list-v1';
+  var LOGO_STORAGE_KEY = 'f9y-logo-overrides-v1';
   var MAX_IMAGE_DIM = 240;
+  var IMAGE_LOAD_TIMEOUT_MS = 8000;
+
+  // Conferences in display order for the filter dropdown
+  var CONFERENCE_ORDER = [
+    'ACC', 'Big Ten', 'Big 12', 'SEC',
+    'American', 'Conference USA', 'MAC', 'Mountain West', 'Pac-12', 'Sun Belt',
+    'Independent'
+  ];
 
   // Muted, editorial tones that sit well on the brand's cream body —
   // matches assets/brand.css's --f9y-tier-* tokens (first 6), extended
@@ -26,7 +35,23 @@
     btnAddText: document.getElementById('btn-add-text'),
     btnReset: document.getElementById('btn-reset'),
     btnExport: document.getElementById('btn-export'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+
+    btnToggleTeams: document.getElementById('btn-toggle-teams'),
+    teamBrowser: document.getElementById('team-browser'),
+    teamSearch: document.getElementById('team-search'),
+    teamConfFilter: document.getElementById('team-conf-filter'),
+    teamClassFilter: document.getElementById('team-class-filter'),
+    teamGrid: document.getElementById('team-grid'),
+    teamResultCount: document.getElementById('team-result-count'),
+    btnAddAllFiltered: document.getElementById('btn-add-all-filtered'),
+
+    btnImportLogos: document.getElementById('btn-import-logos'),
+    importModal: document.getElementById('import-modal'),
+    importTextarea: document.getElementById('import-textarea'),
+    btnImportSave: document.getElementById('btn-import-save'),
+    btnImportCancel: document.getElementById('btn-import-cancel'),
+    btnImportClear: document.getElementById('btn-import-clear')
   };
 
   var sortables = [];
@@ -117,10 +142,7 @@
 
   function addTextItemToPool() {
     var color = DEFAULT_TIER_COLORS[Math.floor(Math.random() * DEFAULT_TIER_COLORS.length)];
-    var item = { id: nextId('item'), type: 'text', text: 'New Card', color: color };
-    var el = createItemElement(item);
-    els.poolContainer.appendChild(el);
-    refreshPoolEmptyState();
+    var el = appendTextItem(els.poolContainer, 'New Card', color);
     saveState();
 
     var textEl = el.querySelector('.tl-item-text');
@@ -129,6 +151,16 @@
       textEl.focus();
       selectAllText(textEl);
     });
+  }
+
+  // Appends a text-card item without stealing focus — used for
+  // programmatic inserts (team fallback chips, bulk "add all").
+  function appendTextItem(container, text, color) {
+    var item = { id: nextId('item'), type: 'text', text: text, color: color };
+    var el = createItemElement(item);
+    container.appendChild(el);
+    refreshPoolEmptyState();
+    return el;
   }
 
   function selectAllText(el) {
@@ -168,6 +200,52 @@
         img.src = reader.result;
       };
       reader.readAsDataURL(file);
+    });
+  }
+
+  // Loads a (possibly cross-origin) image URL and bakes it down to a
+  // resized data URL via canvas — same treatment as an uploaded file, so
+  // team logos become normal portable/exportable image items with no
+  // ongoing dependency on the source URL or its CORS headers being
+  // present at export time. Rejects if the URL 404s, times out, or the
+  // source doesn't allow cross-origin canvas reads (tainted canvas).
+  function loadImageAsDataURL(url) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var settled = false;
+      var timer = window.setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        reject(new Error('timeout'));
+      }, IMAGE_LOAD_TIMEOUT_MS);
+
+      img.crossOrigin = 'anonymous';
+      img.onload = function () {
+        if (settled) return;
+        window.clearTimeout(timer);
+        try {
+          var scale = Math.min(1, MAX_IMAGE_DIM / Math.max(img.width, img.height));
+          var w = Math.max(1, Math.round(img.width * scale));
+          var h = Math.max(1, Math.round(img.height * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          var dataUrl = canvas.toDataURL('image/png');
+          settled = true;
+          resolve(dataUrl);
+        } catch (e) {
+          settled = true;
+          reject(e);
+        }
+      };
+      img.onerror = function () {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        reject(new Error('image failed to load'));
+      };
+      img.src = url;
     });
   }
 
@@ -303,6 +381,230 @@
     els.tiersContainer.appendChild(createTierElement(tier));
     updateTierCountLabel();
     saveState();
+  }
+
+  // ---------------------------------------------------------------------
+  // Team browser (FBS roster + conference/P4-G6 filters)
+  // ---------------------------------------------------------------------
+
+  var ALL_TEAMS = window.F9Y_TEAMS || [];
+
+  function normalizeKey(str) {
+    return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  function loadLogoOverrides() {
+    try {
+      var raw = window.localStorage.getItem(LOGO_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveLogoOverrides(map) {
+    try {
+      window.localStorage.setItem(LOGO_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) {
+      // storage full/unavailable — non-fatal
+    }
+  }
+
+  // Builds a normalized-key -> URL lookup once per render so matching an
+  // imported team_logo_lookup()-shaped map (whose keys may not exactly
+  // match our team names) against `name` or any `aliases` is a cheap hit.
+  function buildLogoIndex(overrides) {
+    var index = {};
+    Object.keys(overrides).forEach(function (key) {
+      index[normalizeKey(key)] = overrides[key];
+    });
+    return index;
+  }
+
+  function resolveLogoUrl(team, logoIndex) {
+    var keys = [team.name].concat(team.aliases || []);
+    for (var i = 0; i < keys.length; i++) {
+      var hit = logoIndex[normalizeKey(keys[i])];
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  function populateConferenceFilter() {
+    var confs = [];
+    ALL_TEAMS.forEach(function (t) {
+      if (confs.indexOf(t.conf) === -1) confs.push(t.conf);
+    });
+    confs.sort(function (a, b) {
+      var ai = CONFERENCE_ORDER.indexOf(a);
+      var bi = CONFERENCE_ORDER.indexOf(b);
+      if (ai === -1) ai = CONFERENCE_ORDER.length;
+      if (bi === -1) bi = CONFERENCE_ORDER.length;
+      return ai - bi;
+    });
+
+    var frag = document.createDocumentFragment();
+    var allOpt = document.createElement('option');
+    allOpt.value = 'all';
+    allOpt.textContent = 'All Conferences';
+    frag.appendChild(allOpt);
+    confs.forEach(function (conf) {
+      var opt = document.createElement('option');
+      opt.value = conf;
+      opt.textContent = conf;
+      frag.appendChild(opt);
+    });
+    els.teamConfFilter.appendChild(frag);
+  }
+
+  function filteredTeams() {
+    var query = normalizeKey(els.teamSearch.value);
+    var conf = els.teamConfFilter.value;
+    var cls = els.teamClassFilter.value;
+
+    return ALL_TEAMS.filter(function (t) {
+      if (conf !== 'all' && t.conf !== conf) return false;
+      if (cls !== 'all' && t.tier !== cls) return false;
+      if (query) {
+        var haystack = normalizeKey(t.name) + normalizeKey(t.abbr);
+        if (haystack.indexOf(query) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function createTeamChipLogo(team, logoUrl) {
+    var logo = document.createElement('div');
+    logo.className = 'tl-team-chip-logo';
+    logo.style.background = 'linear-gradient(135deg, ' + team.colors[0] + ', ' + team.colors[1] + ')';
+
+    if (logoUrl) {
+      var img = document.createElement('img');
+      img.src = logoUrl;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.onerror = function () {
+        // broken/unreachable override URL — fall back to the color chip
+        logo.removeChild(img);
+        logo.textContent = team.abbr;
+      };
+      logo.appendChild(img);
+    } else {
+      logo.textContent = team.abbr;
+    }
+    return logo;
+  }
+
+  function renderTeamGrid() {
+    var overrides = loadLogoOverrides();
+    var logoIndex = buildLogoIndex(overrides);
+    var teams = filteredTeams();
+
+    els.teamGrid.innerHTML = '';
+    els.teamResultCount.textContent = teams.length + ' team' + (teams.length === 1 ? '' : 's');
+
+    if (!teams.length) {
+      var empty = document.createElement('div');
+      empty.className = 'tl-team-empty';
+      empty.textContent = 'No teams match those filters.';
+      els.teamGrid.appendChild(empty);
+      return;
+    }
+
+    var frag = document.createDocumentFragment();
+    teams.forEach(function (team) {
+      var logoUrl = resolveLogoUrl(team, logoIndex);
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'tl-team-chip';
+      chip.title = team.name + ' (' + team.conf + ')';
+      chip.appendChild(createTeamChipLogo(team, logoUrl));
+
+      var name = document.createElement('div');
+      name.className = 'tl-team-chip-name';
+      name.textContent = team.name;
+      chip.appendChild(name);
+
+      chip.addEventListener('click', function () {
+        addTeamToPool(team, logoUrl);
+      });
+      frag.appendChild(chip);
+    });
+    els.teamGrid.appendChild(frag);
+  }
+
+  // Resolves a team to a real (baked) logo image item when a logo URL is
+  // available, otherwise falls back to a colored initials card — either
+  // way the pool always gets a normal, exportable item.
+  function teamToItem(team, logoUrl) {
+    if (!logoUrl) {
+      return Promise.resolve({ kind: 'text', text: team.abbr, color: team.colors[0] });
+    }
+    return loadImageAsDataURL(logoUrl)
+      .then(function (dataUrl) {
+        return { kind: 'image', src: dataUrl };
+      })
+      .catch(function () {
+        return { kind: 'text', text: team.abbr, color: team.colors[0] };
+      });
+  }
+
+  function addTeamToPool(team, logoUrl) {
+    teamToItem(team, logoUrl).then(function (result) {
+      if (result.kind === 'image') {
+        addImageItemsToPool([result.src]);
+      } else {
+        appendTextItem(els.poolContainer, result.text, result.color);
+        saveState();
+      }
+    });
+  }
+
+  function addAllFilteredToPool() {
+    var overrides = loadLogoOverrides();
+    var logoIndex = buildLogoIndex(overrides);
+    var teams = filteredTeams();
+    if (!teams.length) return;
+
+    if (teams.length > 40 && !window.confirm('Add all ' + teams.length + ' filtered teams to the pool?')) {
+      return;
+    }
+
+    els.btnAddAllFiltered.disabled = true;
+    var originalLabel = els.btnAddAllFiltered.textContent;
+    els.btnAddAllFiltered.textContent = 'Adding…';
+
+    Promise.all(teams.map(function (team) {
+      return teamToItem(team, resolveLogoUrl(team, logoIndex));
+    })).then(function (results) {
+      results.forEach(function (result) {
+        if (result.kind === 'image') {
+          var item = { id: nextId('item'), type: 'image', src: result.src };
+          els.poolContainer.appendChild(createItemElement(item));
+        } else {
+          appendTextItem(els.poolContainer, result.text, result.color);
+        }
+      });
+      refreshPoolEmptyState();
+      saveState();
+      showToast('Added ' + results.length + ' teams to the pool.');
+    }).finally(function () {
+      els.btnAddAllFiltered.disabled = false;
+      els.btnAddAllFiltered.textContent = originalLabel;
+    });
+  }
+
+  function openImportModal() {
+    var overrides = loadLogoOverrides();
+    els.importTextarea.value = Object.keys(overrides).length
+      ? JSON.stringify(overrides, null, 2)
+      : '';
+    els.importModal.hidden = false;
+    els.importTextarea.focus();
+  }
+
+  function closeImportModal() {
+    els.importModal.hidden = true;
   }
 
   // ---------------------------------------------------------------------
@@ -492,6 +794,51 @@
 
   els.btnExport.addEventListener('click', exportPng);
 
+  els.btnToggleTeams.addEventListener('click', function () {
+    els.teamBrowser.hidden = !els.teamBrowser.hidden;
+    if (!els.teamBrowser.hidden) renderTeamGrid();
+  });
+  els.teamSearch.addEventListener('input', function () {
+    window.clearTimeout(els.teamSearch._debounce);
+    els.teamSearch._debounce = window.setTimeout(renderTeamGrid, 150);
+  });
+  els.teamConfFilter.addEventListener('change', renderTeamGrid);
+  els.teamClassFilter.addEventListener('change', renderTeamGrid);
+  els.btnAddAllFiltered.addEventListener('click', addAllFilteredToPool);
+
+  els.btnImportLogos.addEventListener('click', openImportModal);
+  els.btnImportCancel.addEventListener('click', closeImportModal);
+  els.importModal.addEventListener('click', function (e) {
+    if (e.target === els.importModal) closeImportModal();
+  });
+  els.btnImportSave.addEventListener('click', function () {
+    var text = els.importTextarea.value.trim();
+    var parsed = {};
+    if (text) {
+      try {
+        parsed = JSON.parse(text);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          throw new Error('not an object');
+        }
+      } catch (e) {
+        showToast('That doesn\'t look like valid JSON — expected {"Team Name": "url"}.');
+        return;
+      }
+    }
+    saveLogoOverrides(parsed);
+    closeImportModal();
+    renderTeamGrid();
+    showToast('Logo map saved (' + Object.keys(parsed).length + ' teams).');
+  });
+  els.btnImportClear.addEventListener('click', function () {
+    if (window.confirm('Clear all saved logo overrides?')) {
+      saveLogoOverrides({});
+      els.importTextarea.value = '';
+      renderTeamGrid();
+      showToast('Cleared saved logos.');
+    }
+  });
+
   els.boardTitle.addEventListener('input', function () {
     window.clearTimeout(els.boardTitle._debounce);
     els.boardTitle._debounce = window.setTimeout(saveState, 400);
@@ -533,4 +880,5 @@
 
   var saved = loadState();
   renderState(saved || buildDefaultState());
+  populateConferenceFilter();
 })();
