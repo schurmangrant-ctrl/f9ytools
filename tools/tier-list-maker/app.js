@@ -438,6 +438,13 @@
     var footerH = Math.round(height * FOOTER_RATIO);
     var bodyH = height - headerH - footerH;
 
+    // small, fixed top/bottom inset (not centered) so the eyebrow sits
+    // near the header's top edge and the headline gets the rest of the
+    // space to grow into
+    var headerPadY = Math.round(headerH * 0.1);
+    els.captureHeader.style.paddingTop = headerPadY + 'px';
+    els.captureHeader.style.paddingBottom = headerPadY + 'px';
+
     els.captureHeader.style.height = headerH + 'px';
     els.captureFooter.style.height = footerH + 'px';
     els.captureBody.style.height = bodyH + 'px';
@@ -541,7 +548,7 @@
   // #board-title has white-space:nowrap, so an untamed size would
   // otherwise just overflow the card's fixed width.
   function fitHeadlineFontSize(headerH) {
-    var size = Math.max(18, Math.round(headerH * 0.34));
+    var size = Math.max(18, Math.round(headerH * 0.46));
     els.boardTitle.style.fontSize = size + 'px';
     var guard = 0;
     while (els.boardTitle.scrollWidth > els.boardTitle.clientWidth && size > 9 && guard < 60) {
@@ -942,30 +949,42 @@
     els.btnExport.disabled = true;
     els.btnExport.textContent = 'Exporting…';
 
-    window.requestAnimationFrame(function () {
-      window.requestAnimationFrame(function () {
+    // Wait for the custom @font-face fonts (Barlow Condensed Black, DM
+    // Mono) to finish loading before capturing — if html2canvas rasterizes
+    // before they're ready, it falls back to different font metrics and
+    // the text renders bunched/overlapping despite looking fine live.
+    var fontsReady = (document.fonts && document.fonts.ready) || Promise.resolve();
+
+    fontsReady.then(function () {
+      return new Promise(function (resolve) {
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(resolve);
+        });
+      });
+    }).then(function () {
+      return (function () {
         // scale so the output is always exactly EXPORT_WIDTH wide (and,
         // since layoutBoard() pins the card to CARD_ASPECT, exactly
         // EXPORT_HEIGHT tall) regardless of the on-screen render width
         var scale = EXPORT_WIDTH / els.captureRoot.offsetWidth;
-        html2canvas(els.captureRoot, {
+        return html2canvas(els.captureRoot, {
           scale: scale,
           backgroundColor: null,
           useCORS: true
-        }).then(function (canvas) {
-          var link = document.createElement('a');
-          link.download = 'full9yards-tier-list.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        }).catch(function () {
-          showToast('Export failed — try again.');
-        }).finally(function () {
-          els.captureRoot.classList.remove('exporting');
-          els.btnExport.disabled = false;
-          els.btnExport.textContent = 'Export PNG';
-          saveState();
         });
-      });
+      })();
+    }).then(function (canvas) {
+      var link = document.createElement('a');
+      link.download = 'full9yards-tier-list.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch(function () {
+      showToast('Export failed — try again.');
+    }).finally(function () {
+      els.captureRoot.classList.remove('exporting');
+      els.btnExport.disabled = false;
+      els.btnExport.textContent = 'Export PNG';
+      saveState();
     });
   }
 

@@ -236,17 +236,36 @@
   background: var(--f9y-black);
   /* horizontal padding is set inline by layoutBoard() (padX) so it lines
      up exactly with the body's padding and the tiers below; this is
-     just a pre-JS fallback */
-  padding: 5% 7% 0;
+     just a pre-JS fallback. Vertical padding is also set inline. */
+  padding: 5% 7%;
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tl-capture-header-text {
+  display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .tl-capture-header .f9y-eyebrow {
-  margin: 0 0 0.4em;
+  margin: 0 0 0.25em;
+  flex: 0 0 auto;
+}
+
+.tl-capture-logo {
+  flex: 0 0 auto;
+  align-self: center;
+  height: 62%;
+  width: auto;
+  object-fit: contain;
 }
 
 .tl-capture-headline {
