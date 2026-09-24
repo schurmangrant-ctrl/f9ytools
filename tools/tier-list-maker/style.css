@@ -234,6 +234,9 @@
 
 .tl-capture-header {
   background: var(--f9y-black);
+  /* horizontal padding is set inline by layoutBoard() (padX) so it lines
+     up exactly with the body's padding and the tiers below; this is
+     just a pre-JS fallback */
   padding: 5% 7% 0;
   box-sizing: border-box;
   overflow: hidden;
@@ -242,7 +245,15 @@
   justify-content: center;
 }
 
+.tl-capture-header .f9y-eyebrow {
+  margin: 0 0 0.4em;
+}
+
 .tl-capture-headline {
+  font-family: var(--f9y-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 1.05;
   color: var(--f9y-white);
   margin: 0;
   white-space: nowrap;
@@ -267,6 +278,8 @@
 
 .tl-capture-body {
   background: var(--f9y-cream);
+  /* horizontal padding set inline by layoutBoard() (padX); vertical
+     padding stays fixed here and is accounted for in the tier-row math */
   padding: 14px 16px;
   box-sizing: border-box;
   overflow: hidden;
@@ -322,11 +335,12 @@
   outline: none;
   min-width: 20px;
   max-width: 100%;
-  word-break: break-word;
   line-height: 1.15;
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  /* white-space/word-break/display/line-clamp are set inline by
+     fitTierLabelFontSize() in app.js — it first tries to shrink to fit
+     on one line, and only wraps (at word boundaries, never mid-word) as
+     a fallback for multi-word labels that still don't fit */
 }
 
 .tl-tier-name:focus,

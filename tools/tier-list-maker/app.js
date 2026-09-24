@@ -16,6 +16,7 @@
 
   var HEADER_RATIO = 0.17;
   var FOOTER_RATIO = 0.05;
+  var PAD_X_RATIO = 0.06; // shared header/body/footer horizontal inset
   var TIER_GAP = 4;       // must match .tl-tiers gap in style.css
   var ITEM_GAP = 6;       // must match .tl-items-row gap in style.css
   var ITEMS_ROW_PAD_X = 16; // must match .tl-items-row padding (4px 8px) L+R
@@ -423,6 +424,16 @@
     var height = Math.round(width * CARD_ASPECT);
     els.captureRoot.style.height = height + 'px';
 
+    // one shared horizontal inset for header/body/footer so the eyebrow,
+    // headline and tagline all line up with the tier boxes' left edge
+    var padX = Math.round(width * PAD_X_RATIO);
+    els.captureHeader.style.paddingLeft = padX + 'px';
+    els.captureHeader.style.paddingRight = padX + 'px';
+    els.captureBody.style.paddingLeft = padX + 'px';
+    els.captureBody.style.paddingRight = padX + 'px';
+    els.captureFooter.style.paddingLeft = padX + 'px';
+    els.captureFooter.style.paddingRight = padX + 'px';
+
     var headerH = Math.round(height * HEADER_RATIO);
     var footerH = Math.round(height * FOOTER_RATIO);
     var bodyH = height - headerH - footerH;
@@ -437,8 +448,14 @@
     var tierCount = tierRows.length;
     if (!tierCount) return;
 
+    // measure the tiers container's actual available height (rather than
+    // reusing bodyH directly) so the body's own top/bottom padding is
+    // correctly excluded — using bodyH as-is here previously left the
+    // tier stack taller than the body's content box, and the overflow
+    // got clipped at the bottom by the body's overflow:hidden.
+    var tiersAvailableH = els.tiersContainer.clientHeight;
     var totalGap = TIER_GAP * (tierCount - 1);
-    var tierRowH = Math.max(20, Math.floor((bodyH - totalGap) / tierCount));
+    var tierRowH = Math.max(20, Math.floor((tiersAvailableH - totalGap) / tierCount));
 
     var labelWidth = Math.min(MAX_LABEL_WIDTH, Math.max(MIN_LABEL_WIDTH, Math.round(width * LABEL_WIDTH_RATIO)));
     var labelFontSize = Math.max(9, Math.min(20, Math.round(tierRowH * 0.34)));
@@ -448,11 +465,55 @@
 
       var label = row.querySelector('.tl-tier-label');
       label.style.flex = '0 0 ' + labelWidth + 'px';
-      var nameEl = row.querySelector('.tl-tier-name');
-      nameEl.style.fontSize = labelFontSize + 'px';
+      fitTierLabelFontSize(row.querySelector('.tl-tier-name'), labelFontSize);
 
       layoutTierItems(row.querySelector('.tl-items-row'), tierRowH);
     });
+  }
+
+  // Tier names wrap up to 2 lines (see .tl-tier-name's -webkit-line-clamp
+  // in style.css) and shrink further if even that doesn't fit the row's
+  // fixed height, rather than truncating with an ellipsis.
+  function fitTierLabelFontSize(nameEl, startSize) {
+    var hasSpace = /\s/.test((nameEl.textContent || '').trim());
+
+    // Phase 1: try to shrink to fit on a single line — no wrapping, so
+    // never breaks a word apart.
+    nameEl.style.whiteSpace = 'nowrap';
+    nameEl.style.display = 'block';
+    nameEl.style.webkitLineClamp = '';
+
+    var size = startSize;
+    nameEl.style.fontSize = size + 'px';
+    var guard = 0;
+    while (nameEl.scrollWidth > nameEl.clientWidth && size > 9 && guard < 30) {
+      size -= 1;
+      nameEl.style.fontSize = size + 'px';
+      guard++;
+    }
+    if (nameEl.scrollWidth <= nameEl.clientWidth) {
+      return; // fits on one line at a reasonable size — done
+    }
+
+    // Phase 2: still doesn't fit as one line. Only wrap for multi-word
+    // labels (breaking only at spaces, never mid-word); a single long
+    // word just stays at its smallest single-line size from phase 1.
+    if (hasSpace) {
+      nameEl.style.whiteSpace = 'normal';
+      nameEl.style.wordBreak = 'normal';
+      nameEl.style.display = '-webkit-box';
+      nameEl.style.webkitLineClamp = '2';
+      nameEl.style.webkitBoxOrient = 'vertical';
+
+      size = startSize;
+      nameEl.style.fontSize = size + 'px';
+      guard = 0;
+      while (nameEl.scrollHeight > nameEl.clientHeight + 1 && size > 7 && guard < 30) {
+        size -= 1;
+        nameEl.style.fontSize = size + 'px';
+        guard++;
+      }
+    }
   }
 
   function layoutTierItems(itemsRow, tierRowH) {
