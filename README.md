@@ -29,12 +29,11 @@ Build a branded tier list and export it as a PNG for socials.
 
 - Up to 20 tiers, each with an editable name and color
 - Add items as uploaded images or text cards
-- **Team Browser** ("+ Add Teams"): every FBS team, filterable by
-  conference or by Power 4 / Group of 6 / Independent, with search and a
-  bulk "Add All Shown to Pool". Teams without a real logo wired in show a
-  colored initials chip (using the team's actual colors) instead of a
-  broken image, so the feature works immediately. See "Team logos" below
-  for wiring in real logo images.
+- **Team Browser** ("+ Add Teams"): every FBS team (137, real logos
+  included), filterable by conference or by Power 4 / Group of 6 /
+  Independent, with search and a bulk "Add All Shown to Pool". Any team
+  missing a logo file falls back to a colored initials chip instead of a
+  broken image.
 - Drag and drop items between tiers and the item pool (touch-friendly)
 - Editable board title/subtitle
 - "Export PNG" renders just the branded card (no UI chrome) at 2x
@@ -50,27 +49,31 @@ install step, no CDN dependency, and no build step required.
 #### Team data (`teams-data.js`)
 
 The full FBS roster (name, conference, Power 4 / Group of 6 / Independent
-classification, and placeholder colors) lives in
-`tools/tier-list-maker/teams-data.js` as a plain, commented array —
-conference realignment moves fast, so double-check the Mountain West and
-Pac-12 sections especially, and edit directly if anything's out of date.
+classification, and colors) lives in `tools/tier-list-maker/teams-data.js`
+as a plain, commented array — conference realignment moves fast, so
+double-check the Mountain West and Pac-12 sections especially, and edit
+directly if anything's out of date.
 
-#### Team logos
+#### Team logos (`assets/logos/`)
 
-No real logo images are bundled yet — team chips currently render as
-colored initials. To wire in real logos, click **Import Logos…** in the
-Team Browser and paste a JSON object shaped like your existing
-`team_logo_lookup()` output: `{"Alabama": "https://...", ...}`. Matching
-is case/punctuation-insensitive and also checks each team's `aliases` in
-`teams-data.js`. This is saved to that browser's local storage only.
+137 real team logos are bundled as local PNG files under `assets/logos/`,
+one per team, named by a slugified version of the team's name (e.g.
+`ole-miss.png`, `texas-am.png` — see `slugify()` in `app.js`). Being local
+files means PNG export never depends on a third-party CDN's uptime or
+CORS headers.
 
-When a logo URL resolves, the tool immediately loads the image into a
-canvas and bakes it down to a local data URL (same treatment as an
-uploaded file) rather than keeping a live hotlink — this keeps the board
-portable/offline and avoids PNG export breaking on cross-origin images
-that don't send CORS headers. If a URL fails to load for any reason, the
-team silently falls back to its colored initials chip instead of a broken
-image.
+To add or replace a logo, drop a PNG into `assets/logos/` named
+`<slugified-team-name>.png` — no code changes needed, it's picked up
+automatically. A team with no matching file falls back to a colored
+initials chip instead of a broken image.
+
+You can *additionally* wire in a URL-based override (e.g. for a team not
+yet in the local set) via **Import Logos…** in the Team Browser: paste a
+JSON object shaped like `team_logo_lookup()`'s output,
+`{"Team Name": "https://...", ...}`. This is tried only if no local file
+matches, is saved to that browser's local storage only, and — like local
+files — gets baked into a data URL on use rather than kept as a live
+hotlink, so export stays reliable either way.
 
 ## Branding
 

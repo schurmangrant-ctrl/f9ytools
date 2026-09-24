@@ -388,9 +388,25 @@
   // ---------------------------------------------------------------------
 
   var ALL_TEAMS = window.F9Y_TEAMS || [];
+  var LOCAL_LOGO_DIR = '../../assets/logos/';
 
   function normalizeKey(str) {
     return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  // Matches the slug scheme used when the real logo files were copied into
+  // assets/logos/ (see the repo's logo-import notes) — lowercase,
+  // non-alphanumeric runs collapsed to a single hyphen.
+  function slugify(str) {
+    return String(str || '')
+      .toLowerCase()
+      .replace(/'/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function localLogoPath(team) {
+    return LOCAL_LOGO_DIR + slugify(team.name) + '.png';
   }
 
   function loadLogoOverrides() {
@@ -421,13 +437,22 @@
     return index;
   }
 
-  function resolveLogoUrl(team, logoIndex) {
+  // Candidate logo sources for a team, in priority order: the real logo
+  // file shipped in assets/logos/ (if one was copied in for this team),
+  // then any imported team_logo_lookup()-style override. Both are tried
+  // in order at load time; the first that actually loads wins, and if
+  // neither does the team falls back to its colored initials chip.
+  function resolveLogoCandidates(team, logoIndex) {
+    var candidates = [localLogoPath(team)];
     var keys = [team.name].concat(team.aliases || []);
     for (var i = 0; i < keys.length; i++) {
       var hit = logoIndex[normalizeKey(keys[i])];
-      if (hit) return hit;
+      if (hit) {
+        candidates.push(hit);
+        break;
+      }
     }
-    return null;
+    return candidates;
   }
 
   function populateConferenceFilter() {
@@ -473,25 +498,29 @@
     });
   }
 
-  function createTeamChipLogo(team, logoUrl) {
+  function createTeamChipLogo(team, candidates) {
     var logo = document.createElement('div');
     logo.className = 'tl-team-chip-logo';
     logo.style.background = 'linear-gradient(135deg, ' + team.colors[0] + ', ' + team.colors[1] + ')';
 
-    if (logoUrl) {
+    var remaining = candidates.slice();
+    function tryNext() {
+      var url = remaining.shift();
+      if (!url) {
+        logo.textContent = team.abbr;
+        return;
+      }
       var img = document.createElement('img');
-      img.src = logoUrl;
+      img.src = url;
       img.alt = '';
       img.loading = 'lazy';
       img.onerror = function () {
-        // broken/unreachable override URL — fall back to the color chip
         logo.removeChild(img);
-        logo.textContent = team.abbr;
+        tryNext();
       };
       logo.appendChild(img);
-    } else {
-      logo.textContent = team.abbr;
     }
+    tryNext();
     return logo;
   }
 
@@ -513,12 +542,12 @@
 
     var frag = document.createDocumentFragment();
     teams.forEach(function (team) {
-      var logoUrl = resolveLogoUrl(team, logoIndex);
+      var candidates = resolveLogoCandidates(team, logoIndex);
       var chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'tl-team-chip';
       chip.title = team.name + ' (' + team.conf + ')';
-      chip.appendChild(createTeamChipLogo(team, logoUrl));
+      chip.appendChild(createTeamChipLogo(team, candidates));
 
       var name = document.createElement('div');
       name.className = 'tl-team-chip-name';
@@ -526,31 +555,33 @@
       chip.appendChild(name);
 
       chip.addEventListener('click', function () {
-        addTeamToPool(team, logoUrl);
+        addTeamToPool(team, candidates);
       });
       frag.appendChild(chip);
     });
     els.teamGrid.appendChild(frag);
   }
 
-  // Resolves a team to a real (baked) logo image item when a logo URL is
-  // available, otherwise falls back to a colored initials card — either
-  // way the pool always gets a normal, exportable item.
-  function teamToItem(team, logoUrl) {
-    if (!logoUrl) {
-      return Promise.resolve({ kind: 'text', text: team.abbr, color: team.colors[0] });
+  // Tries each candidate logo source (real file, then any imported
+  // override) in order and bakes the first one that actually loads down
+  // to a resized data URL — safe even for the local same-origin files,
+  // and it means the pool item never has a live dependency on the source
+  // path. Falls back to a colored initials card if every candidate fails.
+  function teamToItem(team, candidates) {
+    function tryCandidate(index) {
+      if (index >= candidates.length) {
+        return Promise.resolve({ kind: 'text', text: team.abbr, color: team.colors[0] });
+      }
+      return loadImageAsDataURL(candidates[index]).then(
+        function (dataUrl) { return { kind: 'image', src: dataUrl }; },
+        function () { return tryCandidate(index + 1); }
+      );
     }
-    return loadImageAsDataURL(logoUrl)
-      .then(function (dataUrl) {
-        return { kind: 'image', src: dataUrl };
-      })
-      .catch(function () {
-        return { kind: 'text', text: team.abbr, color: team.colors[0] };
-      });
+    return tryCandidate(0);
   }
 
-  function addTeamToPool(team, logoUrl) {
-    teamToItem(team, logoUrl).then(function (result) {
+  function addTeamToPool(team, candidates) {
+    teamToItem(team, candidates).then(function (result) {
       if (result.kind === 'image') {
         addImageItemsToPool([result.src]);
       } else {
@@ -575,7 +606,7 @@
     els.btnAddAllFiltered.textContent = 'Adding…';
 
     Promise.all(teams.map(function (team) {
-      return teamToItem(team, resolveLogoUrl(team, logoIndex));
+      return teamToItem(team, resolveLogoCandidates(team, logoIndex));
     })).then(function (results) {
       results.forEach(function (result) {
         if (result.kind === 'image') {

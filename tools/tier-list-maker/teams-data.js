@@ -114,6 +114,7 @@ window.F9Y_TEAMS = [
 
   // ---------------- Conference USA (G6) ----------------
   { name: 'Delaware', abbr: 'DEL', conf: 'Conference USA', tier: 'G6', colors: ['#00539F', '#FFD200'] },
+  { name: 'Florida International', abbr: 'FIU', conf: 'Conference USA', tier: 'G6', colors: ['#081E3F', '#B6862C'], aliases: ['FIU'] },
   { name: 'Jacksonville State', abbr: 'JVST', conf: 'Conference USA', tier: 'G6', colors: ['#8C1D40', '#FFFFFF'] },
   { name: 'Kennesaw State', abbr: 'KENN', conf: 'Conference USA', tier: 'G6', colors: ['#000000', '#FFC629'] },
   { name: 'Liberty', abbr: 'LIB', conf: 'Conference USA', tier: 'G6', colors: ['#002D62', '#C41230'] },
@@ -148,16 +149,23 @@ window.F9Y_TEAMS = [
   { name: 'New Mexico', abbr: 'UNM', conf: 'Mountain West', tier: 'G6', colors: ['#BA0C2F', '#A7A8AA'] },
   { name: 'San Jose State', abbr: 'SJSU', conf: 'Mountain West', tier: 'G6', colors: ['#0055A2', '#E5A823'] },
   { name: 'Wyoming', abbr: 'WYO', conf: 'Mountain West', tier: 'G6', colors: ['#492F24', '#FFC425'] },
+  // Added on a spot-check against a real logo set — Sac State's move to
+  // FBS/Mountain West is recent, double check this placement.
+  { name: 'Sacramento State', abbr: 'SAC', conf: 'Mountain West', tier: 'G6', colors: ['#046A38', '#FFC72C'] },
 
   // ---------------- Pac-12 (relaunched, G6) ----------------
   // NOTE: this conference relaunched football for the 2026 season —
-  // membership here is my best knowledge but double-check it.
+  // membership here is my best knowledge but double-check it. Oregon
+  // State and Washington State are the two legacy members who kept the
+  // conference name through the 2024 realignment; the rest are new adds.
   { name: 'Boise State', abbr: 'BSU', conf: 'Pac-12', tier: 'G6', colors: ['#0033A0', '#D64309'] },
   { name: 'Colorado State', abbr: 'CSU', conf: 'Pac-12', tier: 'G6', colors: ['#1E4D2B', '#C8C372'] },
   { name: 'Fresno State', abbr: 'FRES', conf: 'Pac-12', tier: 'G6', colors: ['#DB0032', '#002856'] },
+  { name: 'Oregon State', abbr: 'ORST', conf: 'Pac-12', tier: 'G6', colors: ['#DC4405', '#000000'] },
   { name: 'San Diego State', abbr: 'SDSU', conf: 'Pac-12', tier: 'G6', colors: ['#A6192E', '#000000'] },
   { name: 'UNLV', abbr: 'UNLV', conf: 'Pac-12', tier: 'G6', colors: ['#CF0A2C', '#B2B4B2'] },
   { name: 'Utah State', abbr: 'USU', conf: 'Pac-12', tier: 'G6', colors: ['#0F2439', '#4C7CB4'] },
+  { name: 'Washington State', abbr: 'WSU', conf: 'Pac-12', tier: 'G6', colors: ['#981E32', '#5E6A71'] },
   { name: 'Texas State', abbr: 'TXST', conf: 'Pac-12', tier: 'G6', colors: ['#501214', '#A99873'] },
 
   // ---------------- Sun Belt (G6) ----------------
