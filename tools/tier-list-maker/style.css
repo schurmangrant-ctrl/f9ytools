@@ -332,7 +332,7 @@
      so it holds a visible gap open no matter how canvas measures glyphs.
      Kept deliberately generous (not a token 0.01–0.02em nudge) since a
      smaller value here was still reported as touching in a real export. */
-  letter-spacing: 0.03em;
+  letter-spacing: 0.015em;
 }
 
 #board-title[data-placeholder]:empty::before {
