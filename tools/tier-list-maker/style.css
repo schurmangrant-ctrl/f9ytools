@@ -329,8 +329,10 @@
      live DOM for this condensed font depending on the browser/OS doing
      the export, closing the gap between letters almost entirely. A real
      letter-spacing value is honored by html2canvas's text renderer too,
-     so it holds a visible gap open no matter how canvas measures glyphs. */
-  letter-spacing: 0.02em;
+     so it holds a visible gap open no matter how canvas measures glyphs.
+     Kept deliberately generous (not a token 0.01–0.02em nudge) since a
+     smaller value here was still reported as touching in a real export. */
+  letter-spacing: 0.06em;
 }
 
 #board-title[data-placeholder]:empty::before {
