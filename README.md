@@ -75,10 +75,8 @@ periodic re-verification.
 `assets/logos/`, one per team, named by a slugified version of the team's
 name (e.g. `ole-miss.png`, `texas-am.png` — see `slugify()` in `app.js`).
 NFL logos live the same way under `assets/logos/nfl/` (e.g.
-`dallas-cowboys.png`) — 30 of 32 teams currently have one; Denver Broncos
-and Kansas City Chiefs don't and fall back to a colored initials chip.
-Being local files means PNG export never depends on a third-party CDN's
-uptime or CORS headers.
+`dallas-cowboys.png`) — all 32 teams have one. Being local files means
+PNG export never depends on a third-party CDN's uptime or CORS headers.
 
 To add or replace a logo, drop a PNG into the right folder named
 `<slugified-team-name>.png` — no code changes needed, it's picked up

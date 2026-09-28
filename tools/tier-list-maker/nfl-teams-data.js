@@ -12,11 +12,10 @@
  *   - `colors` is [primary, secondary] hex, used for the fallback chip
  *     gradient when a team has no logo file
  *
- * Real logos for teams included in the original asset upload live at
- * assets/logos/nfl/<slugified-team-name>.png (see slugify() in app.js).
- * Denver Broncos and Kansas City Chiefs had no logo file in that upload
- * and fall back to a colored initials chip like any team missing a local
- * file — drop a PNG named accordingly into assets/logos/nfl/ to fix that.
+ * Real logos for all 32 teams live at
+ * assets/logos/nfl/<slugified-team-name>.png (see slugify() in app.js) —
+ * 30 came from the original asset upload, Denver Broncos and Kansas City
+ * Chiefs were added separately since that upload didn't include them.
  */
 window.F9Y_NFL_TEAMS = [
   { name: 'Buffalo Bills', abbr: 'BUF', conf: 'AFC East', tier: 'AFC', colors: ['#00338D', '#C60C30'] },
