@@ -273,6 +273,14 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* pulled 1px left, on top of the stripe (later in DOM order so it
+     paints over it) — html2canvas can leave a single antialiased,
+     partially-transparent pixel right at the seam between the two flex
+     siblings, which reads as a faint light line once the export is
+     flattened onto a non-transparent background. The 1px overlap makes
+     sure a solid color always covers that seam instead of a gap. */
+  margin-left: -1px;
+  position: relative;
 }
 
 .tl-capture-header {
