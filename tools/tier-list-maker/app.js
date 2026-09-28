@@ -1094,7 +1094,18 @@
     // Mono) to finish loading before capturing — if html2canvas rasterizes
     // before they're ready, it falls back to different font metrics and
     // the text renders bunched/overlapping despite looking fine live.
-    var fontsReady = (document.fonts && document.fonts.ready) || Promise.resolve();
+    // document.fonts.ready alone can resolve before a face that hasn't
+    // been explicitly requested at this size/weight is actually usable,
+    // so force-load the exact descriptors used in the card first.
+    var fontsReady = Promise.resolve();
+    if (document.fonts) {
+      fontsReady = Promise.all([
+        document.fonts.load('400 100px "F9Y Display"'),
+        document.fonts.load('400 100px "F9Y Mono"'),
+        document.fonts.load('500 100px "F9Y Mono"'),
+        document.fonts.ready
+      ]).catch(function () { return document.fonts.ready; });
+    }
 
     fontsReady.then(function () {
       return new Promise(function (resolve) {

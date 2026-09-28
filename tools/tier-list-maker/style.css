@@ -324,6 +324,13 @@
   color: var(--f9y-white);
   margin: 0;
   white-space: nowrap;
+  /* Explicit tracking, not just "normal" — html2canvas's per-character
+     canvas text measurement has been observed to land tighter than the
+     live DOM for this condensed font depending on the browser/OS doing
+     the export, closing the gap between letters almost entirely. A real
+     letter-spacing value is honored by html2canvas's text renderer too,
+     so it holds a visible gap open no matter how canvas measures glyphs. */
+  letter-spacing: 0.02em;
 }
 
 #board-title[data-placeholder]:empty::before {
