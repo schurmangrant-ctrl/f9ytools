@@ -54,6 +54,48 @@
   min-width: 140px;
 }
 
+.tl-ap25-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f9y-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 10px;
+  border-radius: var(--f9y-radius-sm);
+  border: 1px solid var(--f9y-border);
+  background: var(--f9y-surface);
+  color: var(--f9y-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.tl-ap25-toggle input:disabled {
+  cursor: not-allowed;
+}
+
+.tl-ap25-toggle:has(input:disabled) {
+  color: var(--f9y-text-faint);
+  cursor: not-allowed;
+}
+
+.tl-ap25-rank {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--f9y-green);
+  color: var(--f9y-white);
+  font-family: var(--f9y-font-body);
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
+}
+
 .tl-team-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
@@ -64,6 +106,7 @@
 }
 
 .tl-team-chip {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -211,7 +254,7 @@
 .tl-capture {
   display: flex;
   align-items: stretch;
-  border-radius: var(--f9y-radius);
+  border-radius: 0; /* square corners — cleaner for a social post than rounded */
   overflow: hidden;
   border: 1px solid var(--f9y-border);
   box-shadow: 0 1px 3px rgba(16, 19, 17, 0.08);
@@ -241,18 +284,8 @@
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.tl-capture-header-text {
-  display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  min-width: 0;
-  flex: 1 1 auto;
 }
 
 .tl-capture-header .f9y-eyebrow {
@@ -260,17 +293,30 @@
   flex: 0 0 auto;
 }
 
+/* title + logo as row-siblings so the logo is naturally vertically
+   centered against the headline specifically (not the eyebrow), and
+   pinned to a fixed spot at the row's right edge — its size is a fixed
+   proportion of the header (set inline by layoutBoard()), independent
+   of the title's length/font-size, so it never shifts around */
+.tl-capture-title-row {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 0;
+}
+
 .tl-capture-logo {
   flex: 0 0 auto;
-  align-self: center;
-  /* height is set inline by syncLogoHeightToTitle() in app.js, matching
-     the headline's actual rendered height rather than a guessed ratio */
-  height: 55%;
   width: auto;
   object-fit: contain;
 }
 
 .tl-capture-headline {
+  flex: 1 1 auto;
+  min-width: 0;
   font-family: var(--f9y-font-display);
   font-weight: 400;
   text-transform: uppercase;

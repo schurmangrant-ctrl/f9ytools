@@ -4,6 +4,7 @@
   var MAX_TIERS = 20;
   var STORAGE_KEY = 'f9y-tier-list-v1';
   var LOGO_STORAGE_KEY = 'f9y-logo-overrides-v1';
+  var AP25_STORAGE_KEY = 'f9y-ap25-v1';
   var MAX_IMAGE_DIM = 240;
   var IMAGE_LOAD_TIMEOUT_MS = 8000;
 
@@ -17,6 +18,7 @@
   var HEADER_RATIO = 0.17;
   var FOOTER_RATIO = 0.05;
   var PAD_X_RATIO = 0.032; // shared header/body/footer horizontal inset — kept small so tier rows run wide
+  var LOGO_HEIGHT_RATIO = 0.5; // logo height as a fixed proportion of header height — never tied to title length
   var TIER_GAP = 4;       // must match .tl-tiers gap in style.css
   var ITEM_GAP = 6;       // must match .tl-items-row gap in style.css
   var ITEMS_ROW_PAD_X = 16; // must match .tl-items-row padding (4px 8px) L+R
@@ -75,7 +77,16 @@
     importTextarea: document.getElementById('import-textarea'),
     btnImportSave: document.getElementById('btn-import-save'),
     btnImportCancel: document.getElementById('btn-import-cancel'),
-    btnImportClear: document.getElementById('btn-import-clear')
+    btnImportClear: document.getElementById('btn-import-clear'),
+
+    ap25Toggle: document.getElementById('ap25-filter-toggle'),
+    ap25ToggleLabel: document.getElementById('ap25-toggle-label'),
+    btnImportAp25: document.getElementById('btn-import-ap25'),
+    ap25Modal: document.getElementById('ap25-modal'),
+    ap25Textarea: document.getElementById('ap25-textarea'),
+    btnAp25Save: document.getElementById('btn-ap25-save'),
+    btnAp25Cancel: document.getElementById('btn-ap25-cancel'),
+    btnAp25Clear: document.getElementById('btn-ap25-clear')
   };
 
   var sortables = [];
@@ -452,11 +463,13 @@
     els.captureFooter.style.height = footerH + 'px';
     els.captureBody.style.height = bodyH + 'px';
 
-    fitHeadlineFontSize(headerH);
-    syncLogoHeightToTitle();
-    // the logo's width just changed, which can shift how much horizontal
-    // space the title has left in the header's flex row — re-fit once
-    // more against that updated width for an exact result
+    // Logo size is a fixed proportion of the header — set before fitting
+    // the title so it never moves or resizes based on title length; it's
+    // a row-sibling of the title (see .tl-capture-title-row in CSS) so
+    // it's naturally vertically centered against the title specifically.
+    if (els.captureLogo) {
+      els.captureLogo.style.height = Math.round(headerH * LOGO_HEIGHT_RATIO) + 'px';
+    }
     fitHeadlineFontSize(headerH);
 
     var tierRows = Array.prototype.slice.call(els.tiersContainer.children);
@@ -567,17 +580,6 @@
   // bigger"), then shrunk in small steps until it fits on one line —
   // #board-title has white-space:nowrap, so an untamed size would
   // otherwise just overflow the card's fixed width.
-  // Sizes the logo mark to match the headline's actual rendered height
-  // (not a guessed percentage of the header, and not the source PNG's
-  // own dimensions — that file has some transparent margin baked in) so
-  // the wordmark and the badge read as the same visual scale.
-  function syncLogoHeightToTitle() {
-    if (!els.captureLogo || !els.captureLogo.naturalHeight) return;
-    var titleH = els.boardTitle.getBoundingClientRect().height;
-    if (!titleH) return;
-    els.captureLogo.style.height = Math.round(titleH) + 'px';
-  }
-
   function fitHeadlineFontSize(headerH) {
     var size = Math.max(18, Math.round(headerH * 0.46));
     els.boardTitle.style.fontSize = size + 'px';
@@ -661,6 +663,78 @@
     return candidates;
   }
 
+  // ---------------------------------------------------------------------
+  // AP Top 25 (self-updated weekly — see the "AP Top 25…" import modal)
+  // ---------------------------------------------------------------------
+
+  function loadAp25() {
+    try {
+      var raw = window.localStorage.getItem(AP25_STORAGE_KEY);
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveAp25(list) {
+    try {
+      window.localStorage.setItem(AP25_STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {
+      // storage full/unavailable — non-fatal
+    }
+  }
+
+  // Turns pasted poll text into an ordered list of team-name strings.
+  // Tolerates "1. Texas", "1) Texas", "1 Texas", or a bare list of names
+  // (one per line), plus a trailing record like "(4-0)" some sites paste
+  // alongside the name.
+  function parseAp25Input(text) {
+    return text
+      .split(/\r?\n/)
+      .map(function (line) {
+        return line
+          .replace(/^\s*#?\d{1,2}[.)]?\s*/, '')
+          .replace(/\s*\([^)]*\)\s*$/, '')
+          .trim();
+      })
+      .filter(function (line) {
+        return line.length > 0;
+      });
+  }
+
+  // normalized-key -> 1-based rank, matching a parsed name against each
+  // team's `name` or any `aliases` (same lenient matching as logos)
+  function buildAp25Index(rankedNames) {
+    var index = {};
+    rankedNames.forEach(function (rawName, i) {
+      var rank = i + 1;
+      var key = normalizeKey(rawName);
+      var team = ALL_TEAMS.filter(function (t) {
+        if (normalizeKey(t.name) === key) return true;
+        return (t.aliases || []).some(function (a) { return normalizeKey(a) === key; });
+      })[0];
+      if (team) index[normalizeKey(team.name)] = rank;
+    });
+    return index;
+  }
+
+  function ap25Rank(team, ap25Index) {
+    return ap25Index[normalizeKey(team.name)] || null;
+  }
+
+  function refreshAp25ToggleAvailability() {
+    var list = loadAp25();
+    var hasRankings = list.length > 0;
+    els.ap25Toggle.disabled = !hasRankings;
+    if (!hasRankings) {
+      els.ap25Toggle.checked = false;
+    }
+    els.ap25ToggleLabel.title = hasRankings
+      ? 'Filter to just this week\'s ranked teams'
+      : 'Paste this week\'s poll via "AP Top 25…" to enable';
+  }
+
   function populateConferenceFilter() {
     var confs = [];
     ALL_TEAMS.forEach(function (t) {
@@ -692,16 +766,24 @@
     var query = normalizeKey(els.teamSearch.value);
     var conf = els.teamConfFilter.value;
     var cls = els.teamClassFilter.value;
+    var ap25Only = els.ap25Toggle.checked && !els.ap25Toggle.disabled;
+    var ap25Index = ap25Only ? buildAp25Index(loadAp25()) : null;
 
-    return ALL_TEAMS.filter(function (t) {
+    var teams = ALL_TEAMS.filter(function (t) {
       if (conf !== 'all' && t.conf !== conf) return false;
       if (cls !== 'all' && t.tier !== cls) return false;
+      if (ap25Only && !ap25Rank(t, ap25Index)) return false;
       if (query) {
         var haystack = normalizeKey(t.name) + normalizeKey(t.abbr);
         if (haystack.indexOf(query) === -1) return false;
       }
       return true;
     });
+
+    if (ap25Only) {
+      teams.sort(function (a, b) { return ap25Rank(a, ap25Index) - ap25Rank(b, ap25Index); });
+    }
+    return teams;
   }
 
   function createTeamChipLogo(team, candidates) {
@@ -733,6 +815,8 @@
   function renderTeamGrid() {
     var overrides = loadLogoOverrides();
     var logoIndex = buildLogoIndex(overrides);
+    var ap25List = loadAp25();
+    var ap25Index = ap25List.length ? buildAp25Index(ap25List) : null;
     var teams = filteredTeams();
 
     els.teamGrid.innerHTML = '';
@@ -754,6 +838,14 @@
       chip.className = 'tl-team-chip';
       chip.title = team.name + ' (' + team.conf + ')';
       chip.appendChild(createTeamChipLogo(team, candidates));
+
+      var rank = ap25Index ? ap25Rank(team, ap25Index) : null;
+      if (rank) {
+        var badge = document.createElement('span');
+        badge.className = 'tl-ap25-rank';
+        badge.textContent = '#' + rank;
+        chip.appendChild(badge);
+      }
 
       var name = document.createElement('div');
       name.className = 'tl-team-chip-name';
@@ -842,6 +934,19 @@
 
   function closeImportModal() {
     els.importModal.hidden = true;
+  }
+
+  function openAp25Modal() {
+    var list = loadAp25();
+    els.ap25Textarea.value = list.length
+      ? list.map(function (name, i) { return (i + 1) + '. ' + name; }).join('\n')
+      : '';
+    els.ap25Modal.hidden = false;
+    els.ap25Textarea.focus();
+  }
+
+  function closeAp25Modal() {
+    els.ap25Modal.hidden = true;
   }
 
   // ---------------------------------------------------------------------
@@ -1103,6 +1208,33 @@
     }
   });
 
+  els.btnImportAp25.addEventListener('click', openAp25Modal);
+  els.btnAp25Cancel.addEventListener('click', closeAp25Modal);
+  els.ap25Modal.addEventListener('click', function (e) {
+    if (e.target === els.ap25Modal) closeAp25Modal();
+  });
+  els.btnAp25Save.addEventListener('click', function () {
+    var names = parseAp25Input(els.ap25Textarea.value);
+    saveAp25(names);
+    closeAp25Modal();
+    refreshAp25ToggleAvailability();
+    renderTeamGrid();
+    var matched = names.length ? Object.keys(buildAp25Index(names)).length : 0;
+    showToast(names.length
+      ? 'Saved ' + names.length + ' ranked teams (' + matched + ' matched to the roster).'
+      : 'Cleared AP Top 25.');
+  });
+  els.btnAp25Clear.addEventListener('click', function () {
+    if (window.confirm('Clear the saved AP Top 25?')) {
+      saveAp25([]);
+      els.ap25Textarea.value = '';
+      refreshAp25ToggleAvailability();
+      renderTeamGrid();
+      showToast('Cleared AP Top 25.');
+    }
+  });
+  els.ap25Toggle.addEventListener('change', renderTeamGrid);
+
   els.boardTitle.addEventListener('input', function () {
     fitHeadlineFontSize(els.captureHeader.clientHeight); // live shrink-to-fit while typing
     window.clearTimeout(els.boardTitle._debounce);
@@ -1149,5 +1281,6 @@
   var saved = loadState();
   renderState(saved || buildDefaultState());
   populateConferenceFilter();
+  refreshAp25ToggleAvailability();
   layoutBoard();
 })();

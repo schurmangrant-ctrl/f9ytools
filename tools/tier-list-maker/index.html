@@ -51,7 +51,12 @@
         <option value="G6">Group of 6 only</option>
         <option value="IND">Independents only</option>
       </select>
+      <label class="tl-ap25-toggle" id="ap25-toggle-label" title="Paste this week's poll via &quot;AP Top 25…&quot; to enable">
+        <input type="checkbox" id="ap25-filter-toggle" disabled>
+        AP Top 25
+      </label>
       <button id="btn-import-logos" class="f9y-btn f9y-btn-sm">Import Logos…</button>
+      <button id="btn-import-ap25" class="f9y-btn f9y-btn-sm">AP Top 25…</button>
       <span id="team-result-count" class="tl-tier-count"></span>
     </div>
     <div id="team-grid" class="tl-team-grid"></div>
@@ -66,11 +71,11 @@
     <div class="tl-capture-stripe"></div>
     <div class="tl-capture-main">
       <header class="tl-capture-header">
-        <div class="tl-capture-header-text">
-          <div class="f9y-eyebrow">Full 9 Yards</div>
+        <div class="f9y-eyebrow">Full 9 Yards</div>
+        <div class="tl-capture-title-row">
           <h1 id="board-title" class="tl-capture-headline" contenteditable="true" data-placeholder="MY TIER LIST"></h1>
+          <img class="tl-capture-logo" src="../../assets/logo-mark.png" alt="">
         </div>
-        <img class="tl-capture-logo" src="../../assets/logo-mark.png" alt="">
       </header>
 
       <div class="tl-capture-body">
@@ -107,6 +112,25 @@
       <button id="btn-import-cancel" class="f9y-btn f9y-btn-ghost">Cancel</button>
       <button id="btn-import-clear" class="f9y-btn f9y-btn-ghost f9y-btn-danger">Clear Saved Logos</button>
       <button id="btn-import-save" class="f9y-btn f9y-btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="ap25-modal" class="tl-modal-overlay" hidden>
+  <div class="tl-modal f9y-card">
+    <h3 class="tl-modal-title">This Week's AP Top 25</h3>
+    <p class="tl-modal-help">
+      Paste the current poll, one team per line, in rank order (1 to 25).
+      Leading numbers/periods are fine — e.g. copy-pasting straight from a
+      rankings page like <code>1. Texas</code> or <code>1) Texas</code>
+      works, and so does a plain list of names. Saved to this browser only
+      — update it here each week.
+    </p>
+    <textarea id="ap25-textarea" class="tl-modal-textarea" placeholder="1. Texas&#10;2. Georgia&#10;3. Ohio State&#10;…"></textarea>
+    <div class="tl-modal-actions">
+      <button id="btn-ap25-cancel" class="f9y-btn f9y-btn-ghost">Cancel</button>
+      <button id="btn-ap25-clear" class="f9y-btn f9y-btn-ghost f9y-btn-danger">Clear Rankings</button>
+      <button id="btn-ap25-save" class="f9y-btn f9y-btn-primary">Save</button>
     </div>
   </div>
 </div>
