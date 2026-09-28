@@ -65,9 +65,12 @@
 
     btnToggleTeams: document.getElementById('btn-toggle-teams'),
     teamBrowser: document.getElementById('team-browser'),
+    leagueCollegeBtn: document.getElementById('league-college'),
+    leagueNflBtn: document.getElementById('league-nfl'),
     teamSearch: document.getElementById('team-search'),
     teamConfFilter: document.getElementById('team-conf-filter'),
     teamClassFilter: document.getElementById('team-class-filter'),
+    ap25Controls: document.getElementById('ap25-controls'),
     teamGrid: document.getElementById('team-grid'),
     teamResultCount: document.getElementById('team-result-count'),
     btnAddAllFiltered: document.getElementById('btn-add-all-filtered'),
@@ -595,8 +598,26 @@
   // Team browser (FBS roster + conference/P4-G6 filters)
   // ---------------------------------------------------------------------
 
+  var LOCAL_LOGO_DIRS = {
+    college: '../../assets/logos/',
+    nfl: '../../assets/logos/nfl/'
+  };
+  var CLASS_FILTER_OPTIONS = {
+    college: [
+      { value: 'all', label: 'All (P4 + G6 + Independents)' },
+      { value: 'P4', label: 'Power 4 only' },
+      { value: 'G6', label: 'Group of 6 only' },
+      { value: 'IND', label: 'Independents only' }
+    ],
+    nfl: [
+      { value: 'all', label: 'All (AFC + NFC)' },
+      { value: 'AFC', label: 'AFC only' },
+      { value: 'NFC', label: 'NFC only' }
+    ]
+  };
+  var currentLeague = 'college';
   var ALL_TEAMS = window.F9Y_TEAMS || [];
-  var LOCAL_LOGO_DIR = '../../assets/logos/';
+  var LOCAL_LOGO_DIR = LOCAL_LOGO_DIRS.college;
 
   function normalizeKey(str) {
     return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -736,6 +757,10 @@
   }
 
   function populateConferenceFilter() {
+    // NFL divisions aren't in CONFERENCE_ORDER, so they fall through to
+    // the stable-sort fallback (ai === bi === CONFERENCE_ORDER.length),
+    // which preserves first-seen order — nfl-teams-data.js is already
+    // laid out AFC East..West, NFC East..West, so that's correct as-is.
     var confs = [];
     ALL_TEAMS.forEach(function (t) {
       if (confs.indexOf(t.conf) === -1) confs.push(t.conf);
@@ -748,6 +773,7 @@
       return ai - bi;
     });
 
+    els.teamConfFilter.innerHTML = '';
     var frag = document.createDocumentFragment();
     var allOpt = document.createElement('option');
     allOpt.value = 'all';
@@ -760,6 +786,38 @@
       frag.appendChild(opt);
     });
     els.teamConfFilter.appendChild(frag);
+  }
+
+  function populateClassFilter() {
+    var options = CLASS_FILTER_OPTIONS[currentLeague] || CLASS_FILTER_OPTIONS.college;
+    els.teamClassFilter.innerHTML = '';
+    var frag = document.createDocumentFragment();
+    options.forEach(function (o) {
+      var opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      frag.appendChild(opt);
+    });
+    els.teamClassFilter.appendChild(frag);
+  }
+
+  // AP Top 25 is a college football poll — hide it entirely in NFL mode
+  // rather than leaving a control on screen that can never apply.
+  function setLeague(league) {
+    currentLeague = league;
+    ALL_TEAMS = league === 'nfl' ? (window.F9Y_NFL_TEAMS || []) : (window.F9Y_TEAMS || []);
+    LOCAL_LOGO_DIR = LOCAL_LOGO_DIRS[league] || LOCAL_LOGO_DIRS.college;
+    els.leagueCollegeBtn.classList.toggle('is-active', league === 'college');
+    els.leagueNflBtn.classList.toggle('is-active', league === 'nfl');
+    els.ap25Controls.hidden = league === 'nfl';
+    if (league === 'nfl') {
+      els.ap25Toggle.checked = false;
+    }
+    els.teamSearch.value = '';
+    populateConferenceFilter();
+    populateClassFilter();
+    refreshAp25ToggleAvailability();
+    renderTeamGrid();
   }
 
   function filteredTeams() {
@@ -1178,6 +1236,8 @@
     els.teamBrowser.hidden = !els.teamBrowser.hidden;
     if (!els.teamBrowser.hidden) renderTeamGrid();
   });
+  els.leagueCollegeBtn.addEventListener('click', function () { setLeague('college'); });
+  els.leagueNflBtn.addEventListener('click', function () { setLeague('nfl'); });
   els.teamSearch.addEventListener('input', function () {
     window.clearTimeout(els.teamSearch._debounce);
     els.teamSearch._debounce = window.setTimeout(renderTeamGrid, 150);
@@ -1291,7 +1351,6 @@
 
   var saved = loadState();
   renderState(saved || buildDefaultState());
-  populateConferenceFilter();
-  refreshAp25ToggleAvailability();
+  setLeague('college');
   layoutBoard();
 })();

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tier List Maker — Full 9 Yards</title>
-<link rel="stylesheet" href="../../assets/brand.css?v=7">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="../../assets/brand.css?v=9">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <div class="f9y-shell">
@@ -43,20 +43,21 @@
 
   <section id="team-browser" class="f9y-card tl-team-browser" hidden>
     <div class="tl-team-browser-controls">
+      <div class="tl-league-toggle" role="group" aria-label="League">
+        <button type="button" id="league-college" class="tl-league-btn is-active" data-league="college">College</button>
+        <button type="button" id="league-nfl" class="tl-league-btn" data-league="nfl">NFL</button>
+      </div>
       <input id="team-search" type="text" class="tl-team-search" placeholder="Search teams…">
       <select id="team-conf-filter" class="tl-team-select"></select>
-      <select id="team-class-filter" class="tl-team-select">
-        <option value="all">All (P4 + G6 + Independents)</option>
-        <option value="P4">Power 4 only</option>
-        <option value="G6">Group of 6 only</option>
-        <option value="IND">Independents only</option>
-      </select>
-      <label class="tl-ap25-toggle" id="ap25-toggle-label" title="Paste this week's poll via &quot;AP Top 25…&quot; to enable">
-        <input type="checkbox" id="ap25-filter-toggle" disabled>
-        AP Top 25
-      </label>
+      <select id="team-class-filter" class="tl-team-select"></select>
+      <span id="ap25-controls" class="tl-ap25-controls">
+        <label class="tl-ap25-toggle" id="ap25-toggle-label" title="Paste this week's poll via &quot;AP Top 25…&quot; to enable">
+          <input type="checkbox" id="ap25-filter-toggle" disabled>
+          AP Top 25
+        </label>
+        <button id="btn-import-ap25" class="f9y-btn f9y-btn-sm">AP Top 25…</button>
+      </span>
       <button id="btn-import-logos" class="f9y-btn f9y-btn-sm">Import Logos…</button>
-      <button id="btn-import-ap25" class="f9y-btn f9y-btn-sm">AP Top 25…</button>
       <span id="team-result-count" class="tl-tier-count"></span>
     </div>
     <div id="team-grid" class="tl-team-grid"></div>
@@ -137,7 +138,8 @@
 
 <script src="../../assets/vendor/sortable.min.js"></script>
 <script src="../../assets/vendor/html2canvas.min.js"></script>
-<script src="teams-data.js?v=7"></script>
-<script src="app.js?v=7"></script>
+<script src="teams-data.js?v=9"></script>
+<script src="nfl-teams-data.js?v=9"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

@@ -54,6 +54,48 @@
   min-width: 140px;
 }
 
+.tl-league-toggle {
+  display: inline-flex;
+  border-radius: var(--f9y-radius-sm);
+  border: 1px solid var(--f9y-border);
+  overflow: hidden;
+}
+
+.tl-league-btn {
+  font-family: var(--f9y-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border: none;
+  background: var(--f9y-surface);
+  color: var(--f9y-text-dim);
+  cursor: pointer;
+}
+
+.tl-league-btn + .tl-league-btn {
+  border-left: 1px solid var(--f9y-border);
+}
+
+.tl-league-btn.is-active {
+  background: var(--f9y-green);
+  color: var(--f9y-white);
+}
+
+.tl-ap25-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* an authored `display` on this class otherwise wins over the browser's
+   default `[hidden] { display: none }` UA rule (author styles always
+   beat user-agent ones, regardless of specificity), so the `hidden`
+   attribute app.js sets in NFL mode would silently do nothing without
+   this override. */
+.tl-ap25-controls[hidden] {
+  display: none;
+}
+
 .tl-ap25-toggle {
   display: inline-flex;
   align-items: center;
