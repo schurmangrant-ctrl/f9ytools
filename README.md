@@ -29,11 +29,21 @@ Build a branded tier list and export it as a PNG for socials.
 
 - Up to 20 tiers, each with an editable name and color
 - Add items as uploaded images or text cards
-- **Team Browser** ("+ Add Teams"): every FBS team (137, real logos
-  included), filterable by conference or by Power 4 / Group of 6 /
-  Independent, with search and a bulk "Add All Shown to Pool". Any team
-  missing a logo file falls back to a colored initials chip instead of a
-  broken image.
+- **Team Browser** ("+ Add Teams"): a College/NFL toggle switches the
+  whole roster —
+  - College: every FBS team (138, real logos included), filterable by
+    conference or by Power 4 / Group of 6 / Independent, plus an AP Top
+    25 filter (see below)
+  - NFL: all 32 teams, filterable by division or by AFC / NFC
+  Both share search and a bulk "Add All Shown to Pool". Any team missing
+  a logo file falls back to a colored initials chip instead of a broken
+  image.
+- **AP Top 25 filter** (college only): paste the current week's poll via
+  "AP Top 25…" (tolerant of `1. Texas`, `1) Texas`, or plain names) to
+  enable a toggle that filters the Team Browser to just those 25 teams,
+  sorted by rank, with rank badges on each chip. Saved to that browser's
+  local storage — no live poll source is fetched automatically, so update
+  it here each week.
 - Drag and drop items between tiers and the item pool (touch-friendly)
 - Editable board title/subtitle
 - "Export PNG" renders just the branded card (no UI chrome) at 2x
@@ -46,7 +56,7 @@ and [html2canvas](https://github.com/niklasvh/html2canvas) for PNG export,
 both vendored (unmodified, minified builds) under `assets/vendor/` — no
 install step, no CDN dependency, and no build step required.
 
-#### Team data (`teams-data.js`)
+#### Team data (`teams-data.js`, `nfl-teams-data.js`)
 
 The full FBS roster (name, conference, Power 4 / Group of 6 / Independent
 classification, and colors) lives in `tools/tier-list-maker/teams-data.js`
@@ -54,15 +64,23 @@ as a plain, commented array — conference realignment moves fast, so
 double-check the Mountain West and Pac-12 sections especially, and edit
 directly if anything's out of date.
 
-#### Team logos (`assets/logos/`)
+The NFL roster lives separately in `tools/tier-list-maker/nfl-teams-data.js`
+(same shape: name/division/conference/colors) — NFL divisions are a fixed,
+long-standing structure, so unlike the FBS roster this doesn't need
+periodic re-verification.
 
-137 real team logos are bundled as local PNG files under `assets/logos/`,
-one per team, named by a slugified version of the team's name (e.g.
-`ole-miss.png`, `texas-am.png` — see `slugify()` in `app.js`). Being local
-files means PNG export never depends on a third-party CDN's uptime or
-CORS headers.
+#### Team logos (`assets/logos/`, `assets/logos/nfl/`)
 
-To add or replace a logo, drop a PNG into `assets/logos/` named
+137 real college team logos are bundled as local PNG files under
+`assets/logos/`, one per team, named by a slugified version of the team's
+name (e.g. `ole-miss.png`, `texas-am.png` — see `slugify()` in `app.js`).
+NFL logos live the same way under `assets/logos/nfl/` (e.g.
+`dallas-cowboys.png`) — 30 of 32 teams currently have one; Denver Broncos
+and Kansas City Chiefs don't and fall back to a colored initials chip.
+Being local files means PNG export never depends on a third-party CDN's
+uptime or CORS headers.
+
+To add or replace a logo, drop a PNG into the right folder named
 `<slugified-team-name>.png` — no code changes needed, it's picked up
 automatically. A team with no matching file falls back to a colored
 initials chip instead of a broken image.

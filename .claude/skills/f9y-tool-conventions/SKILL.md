@@ -160,3 +160,28 @@ Team logos live locally at `assets/logos/<slugified-team-name>.png` (see
 `slugify()` in `app.js`) so export never depends on a third-party CDN.
 Missing-logo teams fall back to a colored initials chip, never a broken
 image.
+
+## Multiple leagues/rosters in one tool
+
+The Tier List Maker's Team Browser supports College and NFL via a league
+toggle rather than two separate tools — this is the pattern to extend for
+a third league/roster:
+- A separate `<league>-teams-data.js` file, same object shape as the
+  original (`name`/`conf`/`tier`/`colors`/optional `aliases`), so all of
+  filtering/search/rendering keeps working unchanged against whichever
+  roster is active. Don't invent a new shape per league.
+- A separate logo folder under `assets/logos/<league>/`, same slug scheme.
+- One `LOCAL_LOGO_DIRS` / `ALL_TEAMS` switch (`setLeague()` in app.js) that
+  swaps the active roster, logo directory, and re-populates both filter
+  `<select>`s — don't hardcode a single roster's filter options in the
+  HTML; populate them from data (see `populateClassFilter()`) so they're
+  correct for whichever league is active.
+- Anything genuinely specific to one league (e.g. the AP Top 25 poll,
+  which only makes sense for college) should hide itself entirely rather
+  than show a control that silently does nothing in the other mode.
+- Gotcha hit building this: don't put a `display` value in the same CSS
+  rule as an element that gets toggled via the `hidden` attribute. Author
+  CSS always overrides the UA stylesheet's `[hidden] { display: none }`
+  regardless of specificity, so an authored `display: flex` (etc.) on that
+  same selector silently defeats `hidden` — add an explicit
+  `.your-class[hidden] { display: none; }` override alongside it.
