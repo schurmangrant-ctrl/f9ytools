@@ -631,6 +631,15 @@
   background: transparent;
 }
 
+/* the subtle border/shadow on .tl-capture is only there to separate the
+   card from the page background while editing — html2canvas captures it
+   as part of the element, so it shows up as a faint light-colored edge
+   around the exported PNG unless it's stripped for the capture. */
+.tl-capture.exporting {
+  border-color: transparent;
+  box-shadow: none;
+}
+
 /* --- toast --- */
 
 .tl-toast {
