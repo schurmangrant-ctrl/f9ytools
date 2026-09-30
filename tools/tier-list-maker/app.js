@@ -310,6 +310,23 @@
     els.btnAddTier.disabled = tierCountValue() >= MAX_TIERS;
   }
 
+  // A tier name's manual line break (see its keydown handler) is a real
+  // <br> element, not a '\n' character — .textContent drops <br>s
+  // entirely (concatenating both lines with no separator), so reading it
+  // back always goes through .innerText, which does represent them as
+  // '\n'. These two helpers keep that translation in one place.
+  function getTierNameText(nameEl) {
+    return nameEl.innerText || '';
+  }
+
+  function setTierNameText(nameEl, text) {
+    nameEl.textContent = '';
+    String(text || '').split('\n').forEach(function (line, i) {
+      if (i > 0) nameEl.appendChild(document.createElement('br'));
+      nameEl.appendChild(document.createTextNode(line));
+    });
+  }
+
   function createTierElement(tier) {
     var row = document.createElement('div');
     row.className = 'tl-tier';
@@ -323,13 +340,31 @@
     name.className = 'tl-tier-name';
     name.contentEditable = 'true';
     name.spellcheck = false;
-    name.textContent = tier.name;
+    setTierNameText(name, tier.name);
     name.addEventListener('input', function () {
+      // live re-fit while typing, using this row's own last-computed base
+      // size (set by layoutBoard()) rather than waiting for a resize/save
+      var baseSize = parseInt(row.dataset.labelFontSize, 10) || 17;
+      fitTierLabelFontSize(name, baseSize);
       window.clearTimeout(name._debounce);
       name._debounce = window.setTimeout(saveState, 400);
     });
     name.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
+      if (e.key !== 'Enter') return;
+      // A tier name only ever gets one manual break (2 lines max) — once
+      // any child element exists (the block/<br> the first Enter created)
+      // a second Enter finishes editing instead of adding a third line.
+      // Manually building that split ourselves via the Selection/Range API
+      // turned out to be unreliable — Chrome would insert the <br> but
+      // then place typed text before it instead of after, so the two
+      // "lines" ran together — whereas just letting the browser's own
+      // native Enter handling do it (it inserts a plain <div> child, kept
+      // caret-safe automatically) works correctly and .innerText still
+      // reads the split as '\n' either way.
+      var hasBreak = Array.prototype.some.call(name.childNodes, function (n) {
+        return n.nodeType === 1;
+      });
+      if (hasBreak) {
         e.preventDefault();
         name.blur();
       }
@@ -493,6 +528,9 @@
 
     tierRows.forEach(function (row) {
       row.style.height = tierRowH + 'px';
+      // cached so the tier name's 'input' listener can re-fit live while
+      // typing without needing a full layoutBoard() pass per keystroke
+      row.dataset.labelFontSize = labelFontSize;
 
       var label = row.querySelector('.tl-tier-label');
       label.style.flex = '0 0 ' + labelWidth + 'px';
@@ -506,7 +544,31 @@
   // in style.css) and shrink further if even that doesn't fit the row's
   // fixed height, rather than truncating with an ellipsis.
   function fitTierLabelFontSize(nameEl, startSize) {
-    var hasSpace = /\s/.test((nameEl.textContent || '').trim());
+    var text = getTierNameText(nameEl);
+    var hasSpace = /\s/.test(text.trim());
+
+    // A manual line break (Enter — see the tier name's keydown handler)
+    // means the user has already decided where to split the label, so
+    // skip straight to sizing for exactly 2 lines instead of trying (and
+    // failing) to cram it onto one line first — that single-line attempt
+    // is what made long custom tier names render smaller than necessary.
+    if (text.indexOf('\n') !== -1) {
+      nameEl.style.whiteSpace = 'pre-line';
+      nameEl.style.wordBreak = 'normal';
+      nameEl.style.display = '-webkit-box';
+      nameEl.style.webkitLineClamp = '2';
+      nameEl.style.webkitBoxOrient = 'vertical';
+
+      var msize = startSize;
+      nameEl.style.fontSize = msize + 'px';
+      var mguard = 0;
+      while (nameEl.scrollHeight > nameEl.clientHeight + 1 && msize > 7 && mguard < 30) {
+        msize -= 1;
+        nameEl.style.fontSize = msize + 'px';
+        mguard++;
+      }
+      return;
+    }
 
     // Phase 1: try to shrink to fit on a single line — no wrapping, so
     // never breaks a word apart.
@@ -1036,7 +1098,7 @@
       var name = row.querySelector('.tl-tier-name');
       var color = row.querySelector('.tl-tier-color').value;
       var items = collectItems(row.querySelector('.tl-items-row'));
-      return { id: row.dataset.tierId, name: name.textContent, color: color, items: items };
+      return { id: row.dataset.tierId, name: getTierNameText(name), color: color, items: items };
     });
     var pool = collectItems(els.poolContainer);
 
