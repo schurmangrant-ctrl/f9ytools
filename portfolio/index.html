@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grant Schurman — Architecture Portfolio</title>
+<meta name="description" content="Architecture portfolio of Grant Schurman.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<header class="bar">
+  <a href="#/" class="mark" aria-label="Home">G<span>/</span>S</a>
+  <div class="coords" id="coords" aria-hidden="true">X 0000 · Y 0000</div>
+</header>
+
+<main id="app"></main>
+
+<div id="lightbox" class="lightbox" hidden>
+  <button class="lb-close" aria-label="Close">✕</button>
+  <button class="lb-nav prev" aria-label="Previous">‹</button>
+  <figure><div id="lb-media"></div><figcaption id="lb-cap"></figcaption></figure>
+  <button class="lb-nav next" aria-label="Next">›</button>
+</div>
+
+<script src="content.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
