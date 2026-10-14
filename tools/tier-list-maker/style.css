@@ -376,8 +376,8 @@
 }
 
 /* matches the real chart pipeline's "subtitle: DM Mono Regular" —
-   font-size is set inline by layoutBoard(), proportional to header
-   height, same as the headline */
+   font-size and margin-top are set inline by layoutBoard() (the latter
+   so the gap above the subtitle always matches the gap above the title) */
 .tl-capture-subtitle {
   flex: 0 0 auto;
   font-family: var(--f9y-font-body);
@@ -385,7 +385,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--f9y-gray);
-  margin: 2px 0 0;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -469,12 +469,15 @@
   height: 100%;
 }
 
+/* square corners + a thick black border, like the bordered stat cells in
+   the chart pipeline's table-style graphics — tier color stays on the
+   label chip, this is just the container treatment */
 .tl-tier {
   display: flex;
   align-items: stretch;
-  border-radius: var(--f9y-radius-sm);
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid var(--f9y-border);
+  border: 2px solid var(--f9y-black);
   background: var(--f9y-surface);
   flex-shrink: 0;
 }
@@ -491,6 +494,7 @@
   text-align: center;
   color: var(--f9y-black);
   overflow: hidden;
+  border-right: 2px solid var(--f9y-black);
 }
 
 .tl-tier-name {

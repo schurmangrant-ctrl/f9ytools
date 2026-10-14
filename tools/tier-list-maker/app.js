@@ -492,24 +492,29 @@
     var footerH = Math.round(height * FOOTER_RATIO);
     var bodyH = height - headerH - footerH;
 
-    // small, fixed top/bottom inset (not centered) so the headline sits
-    // near the header's top edge and the subtitle gets the rest of the
-    // space below it
-    var headerPadY = Math.round(headerH * 0.1);
-    els.captureHeader.style.paddingTop = headerPadY + 'px';
-    els.captureHeader.style.paddingBottom = headerPadY + 'px';
-
     els.captureHeader.style.height = headerH + 'px';
     els.captureFooter.style.height = footerH + 'px';
     els.captureBody.style.height = bodyH + 'px';
 
     // Subtitle starts from a fixed proportion of the header, independent
     // of the title's own size, then shrinks to fit like the title does —
-    // it collapses to nothing (see .exporting #board-subtitle:empty in
-    // style.css) when left blank, so this only matters once the user
-    // actually types one.
+    // it's hidden via an inline display:none during export specifically
+    // when left blank (see exportPng()), which also makes it measure as
+    // 0 height below.
     fitSubtitleFontSize(headerH);
     fitHeadlineFontSize(headerH);
+
+    // Symmetric spacing: whatever gap sits above the title repeats below
+    // the title (above the subtitle) and again below the subtitle,
+    // measured from the title/subtitle's actual rendered heights rather
+    // than a guessed constant so it holds regardless of font size.
+    var titleH = els.boardTitle.offsetHeight;
+    var subtitleH = els.boardSubtitle.offsetHeight; // 0 when hidden
+    var gapCount = subtitleH > 0 ? 3 : 2;
+    var headerGap = Math.max(0, Math.round((headerH - titleH - subtitleH) / gapCount));
+    els.captureHeader.style.paddingTop = headerGap + 'px';
+    els.captureHeader.style.paddingBottom = headerGap + 'px';
+    els.boardSubtitle.style.marginTop = headerGap + 'px';
 
     if (els.captureFooterLeft) {
       els.captureFooterLeft.style.fontSize = Math.max(8, Math.round(footerH * FOOTER_FONT_RATIO)) + 'px';
