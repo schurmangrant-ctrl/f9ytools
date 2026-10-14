@@ -45,7 +45,9 @@ Build a branded tier list and export it as a PNG for socials.
   local storage — no live poll source is fetched automatically, so update
   it here each week.
 - Drag and drop items between tiers and the item pool (touch-friendly)
-- Editable board title/subtitle
+- Editable board title, plus an optional subtitle line (e.g.
+  "WEEK 7 / 2026 SEASON") — empty by default and never appears in the
+  export unless you actually type one
 - "Export PNG" renders just the branded card (no UI chrome) at 2x
   resolution for crisp posting
 - Autosaves your board to the browser's local storage, so a reload
@@ -103,10 +105,11 @@ hotlink, so export stays reliable either way.
 - **Fonts** — self-hosted under `assets/fonts/`: Barlow Condensed Black
   for headlines/taglines, DM Mono (Regular + Medium) for eyebrow,
   subtitle, meta, and body/UI text.
-- **Card frame** — the Tier List Maker's exportable card mirrors
-  `render_branded_card()`'s layout exactly: green left stripe, black
-  header (eyebrow + headline + subtitle), cream body, black footer
-  (tagline + meta).
+- **Card frame** — the Tier List Maker's exportable card uses the chart
+  pipeline's wrapper: green left stripe, black header (headline, plus an
+  optional DM Mono subtitle line), cream body, black footer (the
+  `Full 9 Yards / <tool name>` brand + category pairing — green brand
+  name, dim gray category — in DM Mono, no logo mark).
 
 Every tool should pull from the `:root` tokens in `assets/brand.css`
 rather than hardcoding colors/fonts, so a future brand tweak (e.g. a

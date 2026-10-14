@@ -338,35 +338,8 @@
   justify-content: flex-start;
 }
 
-.tl-capture-header .f9y-eyebrow {
-  margin: 0 0 0.25em;
-  flex: 0 0 auto;
-}
-
-/* title + logo as row-siblings so the logo is naturally vertically
-   centered against the headline specifically (not the eyebrow), and
-   pinned to a fixed spot at the row's right edge — its size is a fixed
-   proportion of the header (set inline by layoutBoard()), independent
-   of the title's length/font-size, so it never shifts around */
-.tl-capture-title-row {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 0;
-}
-
-.tl-capture-logo {
-  flex: 0 0 auto;
-  width: auto;
-  object-fit: contain;
-}
-
 .tl-capture-headline {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 0 auto;
   font-family: var(--f9y-font-display);
   font-weight: 400;
   text-transform: uppercase;
@@ -402,6 +375,48 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* matches the real chart pipeline's "subtitle: DM Mono Regular" —
+   font-size is set inline by layoutBoard(), proportional to header
+   height, same as the headline */
+.tl-capture-subtitle {
+  flex: 0 0 auto;
+  font-family: var(--f9y-font-body);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--f9y-gray);
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#board-subtitle[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+}
+
+#board-subtitle {
+  outline: none;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin-left: -6px;
+}
+
+#board-subtitle:hover,
+#board-subtitle:focus {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* An empty subtitle still shows its dim placeholder live (so it's
+   discoverable as an editable field), but that placeholder — and the
+   line's own space — should never bake into the exported PNG if the
+   user never actually typed one. That's handled in exportPng() by
+   toggling an inline `display: none` directly rather than a CSS rule
+   keyed off :empty — html2canvas doesn't reliably honor structural
+   pseudo-classes like :empty when resolving styles for the capture, so
+   a `.exporting #board-subtitle:empty { display: none }` rule here
+   applies correctly on the live page but silently does nothing in the
+   actual export. */
+
 .tl-capture-body {
   background: var(--f9y-cream);
   /* horizontal padding set inline by layoutBoard() (padX); vertical
@@ -417,6 +432,32 @@
   align-items: center;
   padding: 0 7%;
   box-sizing: border-box;
+}
+
+/* matches the real chart pipeline's footer: brand name in the
+   "eyebrow" green/mono treatment, paired with a dim "meta" mono tag —
+   font-size set inline by layoutBoard(), proportional to footer height */
+.tl-capture-footer-left {
+  font-family: var(--f9y-font-body);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tl-capture-footer-brand {
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--f9y-green);
+}
+
+.tl-capture-footer-sep {
+  color: var(--f9y-gray);
+}
+
+.tl-capture-footer-tag {
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--f9y-gray);
 }
 
 /* --- tiers --- */
@@ -677,7 +718,8 @@
   display: none !important;
 }
 
-.exporting #board-title:hover {
+.exporting #board-title:hover,
+.exporting #board-subtitle:hover {
   background: transparent;
 }
 

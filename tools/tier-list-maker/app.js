@@ -18,7 +18,8 @@
   var HEADER_RATIO = 0.17;
   var FOOTER_RATIO = 0.05;
   var PAD_X_RATIO = 0.032; // shared header/body/footer horizontal inset — kept small so tier rows run wide
-  var LOGO_HEIGHT_RATIO = 0.5; // logo height as a fixed proportion of header height — never tied to title length
+  var SUBTITLE_FONT_RATIO = 0.085; // subtitle font-size as a proportion of header height
+  var FOOTER_FONT_RATIO = 0.3; // footer text font-size as a proportion of footer height
   var TIER_GAP = 4;       // must match .tl-tiers gap in style.css
   var ITEM_GAP = 6;       // must match .tl-items-row gap in style.css
   var ITEMS_ROW_PAD_X = 16; // must match .tl-items-row padding (4px 8px) L+R
@@ -51,8 +52,9 @@
     captureHeader: document.querySelector('.tl-capture-header'),
     captureBody: document.querySelector('.tl-capture-body'),
     captureFooter: document.querySelector('.tl-capture-footer'),
-    captureLogo: document.querySelector('.tl-capture-logo'),
+    captureFooterLeft: document.querySelector('.tl-capture-footer-left'),
     boardTitle: document.getElementById('board-title'),
+    boardSubtitle: document.getElementById('board-subtitle'),
     tierCount: document.getElementById('tier-count'),
     btnAddTier: document.getElementById('btn-add-tier'),
     btnAddImages: document.getElementById('btn-add-images'),
@@ -490,9 +492,9 @@
     var footerH = Math.round(height * FOOTER_RATIO);
     var bodyH = height - headerH - footerH;
 
-    // small, fixed top/bottom inset (not centered) so the eyebrow sits
-    // near the header's top edge and the headline gets the rest of the
-    // space to grow into
+    // small, fixed top/bottom inset (not centered) so the headline sits
+    // near the header's top edge and the subtitle gets the rest of the
+    // space below it
     var headerPadY = Math.round(headerH * 0.1);
     els.captureHeader.style.paddingTop = headerPadY + 'px';
     els.captureHeader.style.paddingBottom = headerPadY + 'px';
@@ -501,14 +503,17 @@
     els.captureFooter.style.height = footerH + 'px';
     els.captureBody.style.height = bodyH + 'px';
 
-    // Logo size is a fixed proportion of the header — set before fitting
-    // the title so it never moves or resizes based on title length; it's
-    // a row-sibling of the title (see .tl-capture-title-row in CSS) so
-    // it's naturally vertically centered against the title specifically.
-    if (els.captureLogo) {
-      els.captureLogo.style.height = Math.round(headerH * LOGO_HEIGHT_RATIO) + 'px';
-    }
+    // Subtitle starts from a fixed proportion of the header, independent
+    // of the title's own size, then shrinks to fit like the title does —
+    // it collapses to nothing (see .exporting #board-subtitle:empty in
+    // style.css) when left blank, so this only matters once the user
+    // actually types one.
+    fitSubtitleFontSize(headerH);
     fitHeadlineFontSize(headerH);
+
+    if (els.captureFooterLeft) {
+      els.captureFooterLeft.style.fontSize = Math.max(8, Math.round(footerH * FOOTER_FONT_RATIO)) + 'px';
+    }
 
     var tierRows = Array.prototype.slice.call(els.tiersContainer.children);
     var tierCount = tierRows.length;
@@ -652,6 +657,20 @@
     while (els.boardTitle.scrollWidth > els.boardTitle.clientWidth && size > 9 && guard < 60) {
       size -= 1;
       els.boardTitle.style.fontSize = size + 'px';
+      guard++;
+    }
+  }
+
+  // Same shrink-to-fit approach as the headline — #board-subtitle also
+  // has white-space:nowrap, so a long custom subtitle needs to shrink
+  // rather than silently clip at the card's edge.
+  function fitSubtitleFontSize(headerH) {
+    var size = Math.max(8, Math.round(headerH * SUBTITLE_FONT_RATIO));
+    els.boardSubtitle.style.fontSize = size + 'px';
+    var guard = 0;
+    while (els.boardSubtitle.scrollWidth > els.boardSubtitle.clientWidth && size > 7 && guard < 40) {
+      size -= 1;
+      els.boardSubtitle.style.fontSize = size + 'px';
       guard++;
     }
   }
@@ -1105,6 +1124,7 @@
     return {
       version: 1,
       boardTitle: els.boardTitle.textContent,
+      boardSubtitle: els.boardSubtitle.textContent,
       tiers: tiers,
       pool: pool
     };
@@ -1155,6 +1175,7 @@
     sortables = [];
 
     els.boardTitle.textContent = state.boardTitle || '';
+    els.boardSubtitle.textContent = state.boardSubtitle || '';
 
     (state.tiers || []).forEach(function (tier) {
       els.tiersContainer.appendChild(createTierElement(tier));
@@ -1172,6 +1193,7 @@
     return {
       version: 1,
       boardTitle: '',
+      boardSubtitle: '',
       tiers: [
         { id: nextId('tier'), name: 'S', color: DEFAULT_TIER_COLORS[0], items: [] },
         { id: nextId('tier'), name: 'A', color: DEFAULT_TIER_COLORS[1], items: [] },
@@ -1200,6 +1222,15 @@
 
     if (els.boardTitle.textContent.trim().length === 0) {
       els.boardTitle.textContent = 'MY TIER LIST';
+    }
+    // An empty subtitle should collapse away entirely in the export
+    // rather than bake in its dim "ADD A SUBTITLE…" placeholder — done
+    // here as an explicit inline style rather than a CSS :empty rule
+    // because html2canvas doesn't reliably honor structural pseudo-
+    // classes when resolving styles for the capture.
+    var subtitleWasEmpty = els.boardSubtitle.textContent.trim().length === 0;
+    if (subtitleWasEmpty) {
+      els.boardSubtitle.style.display = 'none';
     }
 
     els.captureRoot.classList.add('exporting');
@@ -1260,6 +1291,9 @@
       showToast('Export failed — try again.');
     }).finally(function () {
       els.captureRoot.classList.remove('exporting');
+      if (subtitleWasEmpty) {
+        els.boardSubtitle.style.display = '';
+      }
       els.btnExport.disabled = false;
       els.btnExport.textContent = 'Export PNG';
       saveState();
@@ -1377,6 +1411,15 @@
     if (e.key === 'Enter') { e.preventDefault(); els.boardTitle.blur(); }
   });
 
+  els.boardSubtitle.addEventListener('input', function () {
+    fitSubtitleFontSize(els.captureHeader.clientHeight); // live shrink-to-fit while typing
+    window.clearTimeout(els.boardSubtitle._debounce);
+    els.boardSubtitle._debounce = window.setTimeout(saveState, 400);
+  });
+  els.boardSubtitle.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); els.boardSubtitle.blur(); }
+  });
+
   ['dragover', 'dragenter'].forEach(function (evt) {
     els.poolContainer.addEventListener(evt, function (e) {
       if (e.dataTransfer && e.dataTransfer.types.indexOf('Files') !== -1) {
@@ -1406,10 +1449,6 @@
   // ---------------------------------------------------------------------
   // Init
   // ---------------------------------------------------------------------
-
-  if (els.captureLogo && !els.captureLogo.complete) {
-    els.captureLogo.addEventListener('load', layoutBoard);
-  }
 
   var saved = loadState();
   renderState(saved || buildDefaultState());

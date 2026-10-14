@@ -73,6 +73,17 @@ Corollary: measure real rendered dimensions (`clientHeight`,
 assuming a static/config value — e.g. a logo file's on-disk PNG dimensions
 are not its visible content bounds if it has transparent padding.
 
+Corollary 2: don't rely on a CSS structural pseudo-class (`:empty`,
+`:first-child`, etc.) for something that must be correct in the export.
+An `.exporting #el:empty { display: none; }` rule to collapse an optional,
+empty field away from the PNG (e.g. a never-filled-in subtitle) applies
+correctly on the live page but silently does nothing through
+html2canvas — it doesn't reliably evaluate structural pseudo-classes when
+resolving styles for the capture. Toggle an inline style imperatively in
+`exportPng()` instead (set it before the capture, restore it in
+`.finally()`), the same way the existing `.exporting` class itself is
+toggled via `classList` rather than left to a CSS-only mechanism.
+
 ## Export format
 
 - Target Instagram's optimal post ratio, 1080×1350 (4:5). Compute the
