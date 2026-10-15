@@ -333,13 +333,39 @@
   padding: 5% 7%;
   box-sizing: border-box;
   overflow: hidden;
+  /* title/subtitle are position:absolute within this (see .tl-capture-
+     headline / .tl-capture-subtitle below) rather than flex children —
+     when the header's fixed height is tight enough to exactly fit their
+     content (which it always is, by construction, since layoutBoard()
+     sizes the header FROM their content), Chromium's flexbox silently
+     clamps any top-margin increase on a flex child once the column's
+     content would overflow the container's definite height: margin-top
+     values above a certain point all rendered pixel-identical to that
+     threshold in testing. Absolute positioning has no such clamp — each
+     element's `top` always places it exactly where set. */
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  /* header/body/footer's heights are computed precisely in layoutBoard()
+     to sum to exactly the card's total height — flex's default
+     flex-shrink:1 can still silently compress them by a fraction of a
+     px if that sum doesn't land exactly on the card's own separately-
+     rounded total, which was throwing off the header's air-cropping
+     math enough to visibly skew the title/subtitle gaps. Locking all
+     three to flex-shrink:0 makes each one take its set height exactly. */
+  flex-shrink: 0;
 }
 
 .tl-capture-headline {
-  flex: 0 0 auto;
+  /* absolute within .tl-capture-header — top/left/width are set inline
+     by layoutBoard(). left+width (not right:0) because html2canvas's own
+     layout engine was observed to mis-measure left:0;right:0's resolved
+     width on the capture, even though real browsers render it correctly
+     live — see .tl-capture-header's comment on why this isn't a flex
+     child. */
+  position: absolute;
+  top: 0;
   font-family: var(--f9y-font-display);
   font-weight: 400;
   text-transform: uppercase;
@@ -366,7 +392,11 @@
 #board-title {
   outline: none;
   border-radius: 6px;
-  padding: 2px 6px;
+  /* no vertical padding — it'd be a fixed px amount on top of the
+     font's own (proportional-to-size) built-in air, breaking
+     layoutBoard()'s per-font-size air-ratio math in fitHeadlineFontSize
+     neighbors below */
+  padding: 0 6px;
   margin-left: -6px;
 }
 
@@ -379,13 +409,20 @@
    font-size and margin-top are set inline by layoutBoard() (the latter
    so the gap above the subtitle always matches the gap above the title) */
 .tl-capture-subtitle {
-  flex: 0 0 auto;
+  /* absolute within .tl-capture-header, same reasoning as
+     .tl-capture-headline above — top/left/width are set inline by
+     layoutBoard() */
+  position: absolute;
+  top: 0;
   font-family: var(--f9y-font-body);
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--f9y-gray);
   margin: 0;
+  line-height: 1.1; /* explicit rather than the browser default, so the
+    air-ratio constants in layoutBoard() stay accurate regardless of
+    browser/font fallback quirks */
   white-space: nowrap;
   overflow: hidden;
 }
@@ -397,7 +434,7 @@
 #board-subtitle {
   outline: none;
   border-radius: 6px;
-  padding: 2px 6px;
+  padding: 0 6px; /* see #board-title's comment on vertical padding */
   margin-left: -6px;
 }
 
@@ -424,6 +461,7 @@
   padding: 14px 16px;
   box-sizing: border-box;
   overflow: hidden;
+  flex-shrink: 0; /* see .tl-capture-header's comment */
 }
 
 .tl-capture-footer {
@@ -432,6 +470,7 @@
   align-items: center;
   padding: 0 7%;
   box-sizing: border-box;
+  flex-shrink: 0; /* see .tl-capture-header's comment */
 }
 
 /* matches the real chart pipeline's footer: brand name in the
@@ -591,13 +630,20 @@
   position: relative;
   width: 76px;
   height: 76px;
-  border-radius: 8px;
   overflow: hidden;
-  background: var(--f9y-surface-2);
-  border: 1px solid var(--f9y-border);
   color: var(--f9y-black);
   cursor: grab;
   flex-shrink: 0;
+}
+
+/* only text cards get a visible chip — an image item (almost always a
+   team logo) has no background/border/radius of its own, just the logo
+   floating free, per "no background or rounded square container, just
+   the logos being pulled in" */
+.tl-item[data-type="text"] {
+  border-radius: 8px;
+  background: var(--f9y-surface-2);
+  border: 1px solid var(--f9y-border);
 }
 
 .tl-item:active {
@@ -607,7 +653,9 @@
 .tl-item-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* contain, not cover — with no visible box behind it, cropping a logo
+     to fill a square would just look wrong; show the whole mark instead */
+  object-fit: contain;
   display: block;
   pointer-events: none;
 }

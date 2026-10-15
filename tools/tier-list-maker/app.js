@@ -15,10 +15,35 @@
   var EXPORT_HEIGHT = 1350;
   var CARD_ASPECT = EXPORT_HEIGHT / EXPORT_WIDTH;
 
-  var HEADER_RATIO = 0.17;
   var FOOTER_RATIO = 0.05;
   var PAD_X_RATIO = 0.032; // shared header/body/footer horizontal inset — kept small so tier rows run wide
-  var SUBTITLE_FONT_RATIO = 0.085; // subtitle font-size as a proportion of header height
+  var TITLE_FONT_RATIO = 0.098; // title font-size as a proportion of card width
+  var SUBTITLE_FONT_RATIO = 0.036; // subtitle font-size as a proportion of card width
+  var HEADER_GAP_RATIO = 0.011; // visual gap above/within/below the header's title+subtitle stack (glyph edge to glyph edge, not box edge), as a proportion of card width
+
+  // Display/mono fonts bake a lot of invisible space into their own line
+  // metrics (ascender/descender clearance baked into the font file, on
+  // top of what CSS line-height adds) — without compensating for this, a
+  // title/subtitle's CSS box can sit right at its "gap" from a neighbor
+  // while the actual visible letters still look like they're floating
+  // well below/above it. These ratios (relative to font-size) are what
+  // layoutBoard() uses to crop that invisible space via a negative
+  // margin instead of just shrinking an already-tiny external gap.
+  //
+  // Calibrated empirically, not from canvas ctx.measureText(): that
+  // overstated the real gap, apparently because it doesn't account for
+  // how the browser actually distributes a compressed CSS line-height
+  // (1.05 / 1.1 here, versus each font's own natural ~1.2 ratio) around
+  // the glyph. The real numbers came from rendering actual DOM text in
+  // isolation (generous surrounding space so nothing clips) and
+  // measuring the first/last non-background pixel row against the
+  // element's own box position. Barlow Condensed Black (title) bakes in
+  // real top/bottom air; DM Mono (subtitle) turns out to bake in almost
+  // none at this line-height — its line box is nearly all visible ink.
+  var TITLE_TOP_AIR_RATIO = 0.21;
+  var TITLE_BOTTOM_AIR_RATIO = 0.08;
+  var SUBTITLE_TOP_AIR_RATIO = 0;
+  var SUBTITLE_BOTTOM_AIR_RATIO = 0;
   var FOOTER_FONT_RATIO = 0.3; // footer text font-size as a proportion of footer height
   var TIER_GAP = 4;       // must match .tl-tiers gap in style.css
   var ITEM_GAP = 6;       // must match .tl-items-row gap in style.css
@@ -488,33 +513,73 @@
     els.captureFooter.style.paddingLeft = padX + 'px';
     els.captureFooter.style.paddingRight = padX + 'px';
 
-    var headerH = Math.round(height * HEADER_RATIO);
+    // title/subtitle are position:absolute (see .tl-capture-header's CSS
+    // comment), so they no longer inherit their width from the header's
+    // padding box via flex stretch — set it explicitly as left+width
+    // (not left:0;right:0; html2canvas's own layout engine was observed
+    // to mis-measure that on the actual capture, even though it renders
+    // correctly live).
+    var contentWidth = width - 2 * padX;
+    els.boardTitle.style.left = '0px';
+    els.boardTitle.style.width = contentWidth + 'px';
+    els.boardSubtitle.style.left = '0px';
+    els.boardSubtitle.style.width = contentWidth + 'px';
+
+    // Title/subtitle are sized from the card's width, not the header's
+    // height — the header's height is derived from their content below
+    // (tight gap/title/gap/subtitle/gap), so it can't also be an input
+    // to their sizing without being circular.
+    fitSubtitleFontSize(width);
+    fitHeadlineFontSize(width);
+
+    // Same visual gap everywhere in the header stack — glyph edge to
+    // glyph edge, not CSS box edge to box edge (see TITLE_TOP_AIR_RATIO
+    // etc. above). title/subtitle are position:absolute within the
+    // header (see .tl-capture-header's CSS comment for why — Chromium's
+    // flexbox clamps a margin-top increase once the column's content
+    // would overflow the header's definite height, which it always would
+    // here since the header is sized exactly to fit them), so each
+    // element's `top` is computed straight from the header's own top
+    // edge rather than relative to flow position. A `top` is frequently
+    // negative — that's expected: it places the (empty) top of the box
+    // above the header's own edge, where .tl-capture-header's
+    // overflow:hidden silently crops it since there's nothing visible
+    // there to lose.
+    var headerGap = Math.round(width * HEADER_GAP_RATIO);
+    var titleFontSize = parseFloat(els.boardTitle.style.fontSize) || 0;
+    var subtitleFontSize = parseFloat(els.boardSubtitle.style.fontSize) || 0;
+    var hasSubtitle = els.boardSubtitle.offsetHeight > 0;
+
+    var titleTopAir = titleFontSize * TITLE_TOP_AIR_RATIO;
+    var titleBottomAir = titleFontSize * TITLE_BOTTOM_AIR_RATIO;
+    var subtitleTopAir = subtitleFontSize * SUBTITLE_TOP_AIR_RATIO;
+    var subtitleBottomAir = subtitleFontSize * SUBTITLE_BOTTOM_AIR_RATIO;
+    // The air ratios above are fractions of font-size (so they stay
+    // accurate as size scales), but the box being cropped is
+    // fontSize * line-height tall, not fontSize tall — line-height 1.05
+    // here must match .tl-capture-headline's CSS, 1.1 must match
+    // .tl-capture-subtitle's, or visibleH drifts from the real box and
+    // the mid/bottom gaps stop matching the top gap.
+    var titleVisibleH = titleFontSize * 1.05 - titleTopAir - titleBottomAir;
+    var subtitleVisibleH = subtitleFontSize * 1.1 - subtitleTopAir - subtitleBottomAir;
+
+    els.captureHeader.style.paddingTop = '0px';
+    els.captureHeader.style.paddingBottom = '0px';
+    els.boardTitle.style.top = Math.round(headerGap - titleTopAir) + 'px';
+    els.boardSubtitle.style.top = Math.round(2 * headerGap + titleVisibleH - subtitleTopAir) + 'px';
+
+    // headerH only needs to cover the visible glyph heights + gaps — any
+    // leftover invisible descender air past the last line is cropped the
+    // same way, by the header's own fixed height + overflow:hidden.
+    var headerH = hasSubtitle
+      ? Math.round(headerGap * 3 + titleVisibleH + subtitleVisibleH)
+      : Math.round(headerGap * 2 + titleVisibleH);
+    els.captureHeader.style.height = headerH + 'px';
+
     var footerH = Math.round(height * FOOTER_RATIO);
     var bodyH = height - headerH - footerH;
-
-    els.captureHeader.style.height = headerH + 'px';
     els.captureFooter.style.height = footerH + 'px';
     els.captureBody.style.height = bodyH + 'px';
-
-    // Subtitle starts from a fixed proportion of the header, independent
-    // of the title's own size, then shrinks to fit like the title does —
-    // it's hidden via an inline display:none during export specifically
-    // when left blank (see exportPng()), which also makes it measure as
-    // 0 height below.
-    fitSubtitleFontSize(headerH);
-    fitHeadlineFontSize(headerH);
-
-    // Symmetric spacing: whatever gap sits above the title repeats below
-    // the title (above the subtitle) and again below the subtitle,
-    // measured from the title/subtitle's actual rendered heights rather
-    // than a guessed constant so it holds regardless of font size.
-    var titleH = els.boardTitle.offsetHeight;
-    var subtitleH = els.boardSubtitle.offsetHeight; // 0 when hidden
-    var gapCount = subtitleH > 0 ? 3 : 2;
-    var headerGap = Math.max(0, Math.round((headerH - titleH - subtitleH) / gapCount));
-    els.captureHeader.style.paddingTop = headerGap + 'px';
-    els.captureHeader.style.paddingBottom = headerGap + 'px';
-    els.boardSubtitle.style.marginTop = headerGap + 'px';
 
     if (els.captureFooterLeft) {
       els.captureFooterLeft.style.fontSize = Math.max(8, Math.round(footerH * FOOTER_FONT_RATIO)) + 'px';
@@ -654,9 +719,11 @@
   // Headline is sized to dominate the header (per "make the title
   // bigger"), then shrunk in small steps until it fits on one line —
   // #board-title has white-space:nowrap, so an untamed size would
-  // otherwise just overflow the card's fixed width.
-  function fitHeadlineFontSize(headerH) {
-    var size = Math.max(18, Math.round(headerH * 0.46));
+  // otherwise just overflow the card's fixed width. Sized off the card's
+  // width (not the header's height, which is itself derived from the
+  // title/subtitle's rendered size — see layoutBoard()).
+  function fitHeadlineFontSize(width) {
+    var size = Math.max(18, Math.round(width * TITLE_FONT_RATIO));
     els.boardTitle.style.fontSize = size + 'px';
     var guard = 0;
     while (els.boardTitle.scrollWidth > els.boardTitle.clientWidth && size > 9 && guard < 60) {
@@ -669,8 +736,8 @@
   // Same shrink-to-fit approach as the headline — #board-subtitle also
   // has white-space:nowrap, so a long custom subtitle needs to shrink
   // rather than silently clip at the card's edge.
-  function fitSubtitleFontSize(headerH) {
-    var size = Math.max(8, Math.round(headerH * SUBTITLE_FONT_RATIO));
+  function fitSubtitleFontSize(width) {
+    var size = Math.max(8, Math.round(width * SUBTITLE_FONT_RATIO));
     els.boardSubtitle.style.fontSize = size + 'px';
     var guard = 0;
     while (els.boardSubtitle.scrollWidth > els.boardSubtitle.clientWidth && size > 7 && guard < 40) {
@@ -1408,7 +1475,7 @@
   els.ap25Toggle.addEventListener('change', renderTeamGrid);
 
   els.boardTitle.addEventListener('input', function () {
-    fitHeadlineFontSize(els.captureHeader.clientHeight); // live shrink-to-fit while typing
+    fitHeadlineFontSize(els.captureRoot.offsetWidth); // live shrink-to-fit while typing
     window.clearTimeout(els.boardTitle._debounce);
     els.boardTitle._debounce = window.setTimeout(saveState, 400);
   });
@@ -1417,7 +1484,7 @@
   });
 
   els.boardSubtitle.addEventListener('input', function () {
-    fitSubtitleFontSize(els.captureHeader.clientHeight); // live shrink-to-fit while typing
+    fitSubtitleFontSize(els.captureRoot.offsetWidth); // live shrink-to-fit while typing
     window.clearTimeout(els.boardSubtitle._debounce);
     els.boardSubtitle._debounce = window.setTimeout(saveState, 400);
   });
