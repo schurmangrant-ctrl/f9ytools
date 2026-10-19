@@ -19,7 +19,8 @@
   var PAD_X_RATIO = 0.032; // shared header/body/footer horizontal inset — kept small so tier rows run wide
   var TITLE_FONT_RATIO = 0.098; // title font-size as a proportion of card width
   var SUBTITLE_FONT_RATIO = 0.036; // subtitle font-size as a proportion of card width
-  var HEADER_GAP_RATIO = 0.011; // visual gap above/within/below the header's title+subtitle stack (glyph edge to glyph edge, not box edge), as a proportion of card width
+  var HEADER_EDGE_GAP_RATIO = 0.02; // visual gap above the title and below the subtitle (glyph edge to header edge), as a proportion of card width
+  var HEADER_MID_GAP_RATIO = 0.011; // visual gap between the title and subtitle (glyph edge to glyph edge), as a proportion of card width
 
   // Display/mono fonts bake a lot of invisible space into their own line
   // metrics (ascender/descender clearance baked into the font file, on
@@ -514,15 +515,20 @@
     els.captureFooter.style.paddingRight = padX + 'px';
 
     // title/subtitle are position:absolute (see .tl-capture-header's CSS
-    // comment), so they no longer inherit their width from the header's
-    // padding box via flex stretch — set it explicitly as left+width
-    // (not left:0;right:0; html2canvas's own layout engine was observed
-    // to mis-measure that on the actual capture, even though it renders
-    // correctly live).
+    // comment), so they no longer inherit their position/width from the
+    // header's padding box via flex stretch — set both explicitly. `left`
+    // was observed to resolve against the header's *border* edge here,
+    // not its padding edge like the CSS spec says a positioned ancestor's
+    // padding box should give an absolutely-positioned child — so it
+    // needs padX added explicitly, or the text sits flush against the
+    // stripe instead of lining up with the tier boxes below (left:0;
+    // right:0 isn't used here because html2canvas's own layout engine was
+    // observed to mis-measure that on the actual capture, even though it
+    // renders correctly live).
     var contentWidth = width - 2 * padX;
-    els.boardTitle.style.left = '0px';
+    els.boardTitle.style.left = padX + 'px';
     els.boardTitle.style.width = contentWidth + 'px';
-    els.boardSubtitle.style.left = '0px';
+    els.boardSubtitle.style.left = padX + 'px';
     els.boardSubtitle.style.width = contentWidth + 'px';
 
     // Title/subtitle are sized from the card's width, not the header's
@@ -532,20 +538,21 @@
     fitSubtitleFontSize(width);
     fitHeadlineFontSize(width);
 
-    // Same visual gap everywhere in the header stack — glyph edge to
-    // glyph edge, not CSS box edge to box edge (see TITLE_TOP_AIR_RATIO
-    // etc. above). title/subtitle are position:absolute within the
-    // header (see .tl-capture-header's CSS comment for why — Chromium's
-    // flexbox clamps a margin-top increase once the column's content
-    // would overflow the header's definite height, which it always would
-    // here since the header is sized exactly to fit them), so each
-    // element's `top` is computed straight from the header's own top
-    // edge rather than relative to flow position. A `top` is frequently
-    // negative — that's expected: it places the (empty) top of the box
-    // above the header's own edge, where .tl-capture-header's
-    // overflow:hidden silently crops it since there's nothing visible
-    // there to lose.
-    var headerGap = Math.round(width * HEADER_GAP_RATIO);
+    // edgeGap (above the title, below the subtitle) and midGap (between
+    // them) can differ — glyph edge to glyph/header edge, not CSS box
+    // edge to box edge (see TITLE_TOP_AIR_RATIO etc. above). title/
+    // subtitle are position:absolute within the header (see
+    // .tl-capture-header's CSS comment for why — Chromium's flexbox
+    // clamps a margin-top increase once the column's content would
+    // overflow the header's definite height, which it always would here
+    // since the header is sized exactly to fit them), so each element's
+    // `top` is computed straight from the header's own top edge rather
+    // than relative to flow position. A `top` is frequently negative —
+    // that's expected: it places the (empty) top of the box above the
+    // header's own edge, where .tl-capture-header's overflow:hidden
+    // silently crops it since there's nothing visible there to lose.
+    var edgeGap = Math.round(width * HEADER_EDGE_GAP_RATIO);
+    var midGap = Math.round(width * HEADER_MID_GAP_RATIO);
     var titleFontSize = parseFloat(els.boardTitle.style.fontSize) || 0;
     var subtitleFontSize = parseFloat(els.boardSubtitle.style.fontSize) || 0;
     var hasSubtitle = els.boardSubtitle.offsetHeight > 0;
@@ -565,15 +572,15 @@
 
     els.captureHeader.style.paddingTop = '0px';
     els.captureHeader.style.paddingBottom = '0px';
-    els.boardTitle.style.top = Math.round(headerGap - titleTopAir) + 'px';
-    els.boardSubtitle.style.top = Math.round(2 * headerGap + titleVisibleH - subtitleTopAir) + 'px';
+    els.boardTitle.style.top = Math.round(edgeGap - titleTopAir) + 'px';
+    els.boardSubtitle.style.top = Math.round(edgeGap + titleVisibleH + midGap - subtitleTopAir) + 'px';
 
     // headerH only needs to cover the visible glyph heights + gaps — any
     // leftover invisible descender air past the last line is cropped the
     // same way, by the header's own fixed height + overflow:hidden.
     var headerH = hasSubtitle
-      ? Math.round(headerGap * 3 + titleVisibleH + subtitleVisibleH)
-      : Math.round(headerGap * 2 + titleVisibleH);
+      ? Math.round(edgeGap * 2 + midGap + titleVisibleH + subtitleVisibleH)
+      : Math.round(edgeGap * 2 + titleVisibleH);
     els.captureHeader.style.height = headerH + 'px';
 
     var footerH = Math.round(height * FOOTER_RATIO);
